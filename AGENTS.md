@@ -23,6 +23,7 @@ It relies on **`@y2kfund/core` (app-core)** to initialize and provide:
 - **Routing**: each page should lazy-load its app/component code (route-level code splitting).
 - **Env/Secrets**: No secrets committed. Runtime config via `import.meta.env.*` env vars and deployment secrets.
 - **SemVer**: This is an **app**, not a library. Respect downstream **SemVer** when upgrading `@y2kfund/*` packages.
+- **Code organization:** **Strong preference that each code file should be less than 300 lines.** When files approach this limit, consider splitting pages/components, extracting composables, creating utility modules, or separating UI/logic concerns.
 
 ---
 
