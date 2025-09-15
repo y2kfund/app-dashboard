@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Positions } from '@y2kfund/positions'
+import '@y2kfund/positions/dist/style.css'
 </script>
 
 <template>
@@ -10,7 +11,7 @@ import { Positions } from '@y2kfund/positions'
     </section>
     
     <!-- Positions component from published package -->
-    <Positions />
+    <Positions accountId="1" />
   </main>
 </template>
 
