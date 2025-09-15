@@ -9,6 +9,7 @@
     "preview": "vite preview --port 5173"
   },
   "dependencies": {
+    "@y2kfund/positions": "git+https://github.com/y2kfund/app-positions.git",
     "vue": "^3.4.0"
   },
   "devDependencies": {

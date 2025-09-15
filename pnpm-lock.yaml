@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@y2kfund/positions':
+        specifier: git+https://github.com/y2kfund/app-positions.git
+        version: git+https://github.com/y2kfund/app-positions.git#52c00a1f1191b33c0b4445c3e809650121993c6b(typescript@5.9.2)
       vue:
         specifier: ^3.4.0
         version: 3.5.21(typescript@5.9.2)
@@ -348,6 +351,10 @@ packages:
 
   '@vue/shared@3.5.21':
     resolution: {integrity: sha512-+2k1EQpnYuVuu3N7atWyG3/xoFWIVJZq4Mz8XNOdScFI0etES75fbny/oU4lKWk/577P1zmg0ioYvpGEDZ3DLw==}
+
+  '@y2kfund/positions@git+https://github.com/y2kfund/app-positions.git#52c00a1f1191b33c0b4445c3e809650121993c6b':
+    resolution: {commit: 52c00a1f1191b33c0b4445c3e809650121993c6b, repo: https://github.com/y2kfund/app-positions.git, type: git}
+    version: 0.1.1
 
   alien-signals@1.0.13:
     resolution: {integrity: sha512-OGj9yyTnJEttvzhTUWuscOvtqxq5vrhF7vL9oS0xJ2mK0ItPYP1/y+vCFebfxoEyAz0++1AIwJ5CMr+Fk3nDmg==}
@@ -711,6 +718,12 @@ snapshots:
       vue: 3.5.21(typescript@5.9.2)
 
   '@vue/shared@3.5.21': {}
+
+  '@y2kfund/positions@git+https://github.com/y2kfund/app-positions.git#52c00a1f1191b33c0b4445c3e809650121993c6b(typescript@5.9.2)':
+    dependencies:
+      vue: 3.5.21(typescript@5.9.2)
+    transitivePeerDependencies:
+      - typescript
 
   alien-signals@1.0.13: {}
 

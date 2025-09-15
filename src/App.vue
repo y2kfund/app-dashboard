@@ -1,9 +1,16 @@
+<script setup lang="ts">
+import { Positions } from '@y2kfund/positions'
+</script>
+
 <template>
   <main class="wrapper">
     <section class="card">
       <h1>Welcome to the dashboard</h1>
       <p>This is a minimal Vue 3 app.</p>
     </section>
+    
+    <!-- Positions component from published package -->
+    <Positions />
   </main>
 </template>
 
