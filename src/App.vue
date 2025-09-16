@@ -16,7 +16,7 @@ import '@y2kfund/positions/dist/style.css'
       
       <!-- Column 2: Positions -->
       <div class="dashboard-column">
-        <Positions accountId="1" />
+        <Positions />
       </div>
       
       <!-- Column 3: Placeholder for future content -->
@@ -26,6 +26,15 @@ import '@y2kfund/positions/dist/style.css'
           <p>Analytics data will be displayed here.</p>
         </section>
       </div>
+
+      <!-- Column 3: Placeholder for future content -->
+      <div class="dashboard-column">
+        <section class="card">
+          <h2>Jaikalimaa</h2>
+          <p>Jaikalimaa data will be displayed here.</p>
+        </section>
+      </div>
+
     </div>
   </main>
 </template>
@@ -39,7 +48,8 @@ import '@y2kfund/positions/dist/style.css'
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 1.5rem;
   margin: 0 auto;
 }
@@ -79,21 +89,5 @@ p {
   line-height: 1.5;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .dashboard {
-    padding: 0.5rem;
-  }
-  
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-@media (min-width: 1200px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
+/* Removed fixed column media rules to allow dynamic column count matching sections */
 </style>
