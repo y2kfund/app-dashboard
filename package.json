@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@y2kfund/core": "git+https://github.com/y2kfund/app-core.git",
-    "@y2kfund/positions": "file:../app-positions",
+    "@y2kfund/positions": "git+https://github.com/y2kfund/app-positions.git",
     "vue": "^3.4.0"
   },
   "devDependencies": {
