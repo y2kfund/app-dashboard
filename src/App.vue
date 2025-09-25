@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { Positions } from '@y2kfund/positions'
+import { Margin } from '@y2kfund/margin'
 import '@y2kfund/positions/dist/style.css'
+import '@y2kfund/margin/dist/style.css';
 
 interface Column {
   id: string
@@ -106,7 +108,7 @@ onMounted(() => {
           
           <!-- Welcome content -->
           <template v-if="column.id === 'welcome'">
-            <p>{{ column.content }}</p>
+            <Margin/>
           </template>
           
           <!-- Positions component -->
