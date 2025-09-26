@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
+import router from './router'
 import './styles.css'
 import { createCore } from '@y2kfund/core'
 
@@ -17,16 +18,19 @@ async function initializeApp() {
     const core = await createCore({
       supabaseUrl,
       supabaseAnon,
+      idb: { databaseName: 'y2k-cache', storeName: 'tanstack' },
       query: { 
         staleTime: 60_000, 
         gcTime: 86_400_000, 
         refetchOnWindowFocus: false 
-      }
+      },
+      buster: 'v1'
     })
 
     // Create and mount the app with app-core plugin
     createApp(App)
       .use(core)
+      .use(router)  // Add router here
       .mount('#app')
 
     console.log('✅ Dashboard initialized successfully with app-core')
