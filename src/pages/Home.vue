@@ -56,16 +56,16 @@ const hiddenAppsList = computed(() =>
 const updateUrlParams = () => {
   const url = new URL(window.location.href)
   if (hiddenColumns.value.size > 0) {
-    url.searchParams.set('hidden', Array.from(hiddenColumns.value).join(','))
+    url.searchParams.set('hiddenApps', Array.from(hiddenColumns.value).join(','))
   } else {
-    url.searchParams.delete('hidden')
+    url.searchParams.delete('hiddenApps')
   }
   window.history.replaceState({}, '', url.toString())
 }
 
 const loadFromUrlParams = () => {
   const urlParams = new URLSearchParams(window.location.search)
-  const hiddenParam = urlParams.get('hidden')
+  const hiddenParam = urlParams.get('hiddenApps')
   if (hiddenParam) {
     hiddenColumns.value = new Set(hiddenParam.split(',').filter(id => 
       columns.value.some(col => col.id === id)
