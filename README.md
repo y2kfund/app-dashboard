@@ -11,7 +11,10 @@ pnpm preview   # preview built app (http://localhost:5173)
 ```
 ## What steps to take when one of the components used by app-dashboard is updated?
 1. delete package-lock.json Why? For e.g. for the component Margin there is a github URL inside package-lock.json that has a commit ID.
-   for e.g. resolved": "git+ssh://git@github.com/y2kfund/app-margin.git#ee098386c00c51f8a3a025424da828b3c6eb25d5",
+   ```
+   for e.g.
+   resolved": "git+ssh://git@github.com/y2kfund/app-margin.git#ee098386c00c51f8a3a025424da828b3c6eb25d5",
+   ```
 3. delete node_modules
 4. npm install Why? This picks up the latest commit ID for margin and puts that inside package-lock.json
 5. this creates a new package-lock.json
