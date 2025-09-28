@@ -130,16 +130,11 @@ onMounted(() => {
           <!-- Margin content (formerly welcome) -->
           <template v-if="column.id === 'margin'">
             <Margin/>
-            <!-- Add navigation links -->
-            <div class="nav-links">
-              <router-link to="/positions" class="nav-link">View Positions App →</router-link>
-              <router-link to="/margin" class="nav-link">View Margin App →</router-link>
-            </div>
           </template>
           
           <!-- Positions component -->
           <template v-else-if="column.id === 'positions'">
-            <Positions />
+            <Positions accountId="demo" />
           </template>
           
           <!-- Other column content -->
@@ -157,34 +152,6 @@ onMounted(() => {
   min-height: 100vh;
   padding: 1rem;
   background-color: #f8fafc;
-}
-
-.nav-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.nav-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  text-decoration: none;
-  color: #374151;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.nav-link:hover {
-  background: #e5e7eb;
-  border-color: #9ca3af;
-  transform: translateY(-1px);
 }
 
 .hidden-apps-bar {
