@@ -48,7 +48,7 @@ const visibleColumns = computed(() =>
   columns.value.filter(col => !hiddenColumns.value.has(col.id))
 )
 
-const hiddenColumnsList = computed(() => 
+const hiddenAppsList = computed(() => 
   columns.value.filter(col => hiddenColumns.value.has(col.id))
 )
 
@@ -93,15 +93,15 @@ onMounted(() => {
 
 <template>
   <main class="dashboard">
-    <!-- Hidden columns tags -->
-    <div v-if="hiddenColumnsList.length > 0" class="hidden-columns-bar">
-      <span class="hidden-columns-label">Hidden columns:</span>
+    <!-- Hidden apps tags -->
+    <div v-if="hiddenAppsList.length > 0" class="hidden-apps-bar">
+      <span class="hidden-apps-label">Hidden apps:</span>
       <button
-        v-for="column in hiddenColumnsList"
+        v-for="column in hiddenAppsList"
         :key="`hidden-${column.id}`"
         @click="showColumn(column.id)"
-        class="hidden-column-tag"
-        :title="`Click to show ${column.title} column`"
+        class="hidden-app-tag"
+        :title="`Click to show ${column.title} app`"
       >
         {{ column.title }}
         <span class="restore-icon">↩</span>
@@ -121,7 +121,7 @@ onMounted(() => {
             <button 
               @click="hideColumn(column.id)"
               class="hide-button"
-              :title="`Hide ${column.title} column`"
+              :title="`Hide ${column.title} app`"
             >
               −
             </button>
@@ -187,7 +187,7 @@ onMounted(() => {
   transform: translateY(-1px);
 }
 
-.hidden-columns-bar {
+.hidden-apps-bar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -199,13 +199,13 @@ onMounted(() => {
   box-shadow: 0 1px 3px rgba(0,0,0,.05);
 }
 
-.hidden-columns-label {
+.hidden-apps-label {
   font-size: 0.875rem;
   color: #6b7280;
   font-weight: 500;
 }
 
-.hidden-column-tag {
+.hidden-app-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -219,7 +219,7 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.hidden-column-tag:hover {
+.hidden-app-tag:hover {
   background: #e5e7eb;
   border-color: #9ca3af;
   transform: translateY(-1px);
@@ -315,7 +315,7 @@ p {
     grid-auto-columns: unset;
   }
   
-  .hidden-columns-bar {
+  .hidden-apps-bar {
     flex-wrap: wrap;
   }
 }
