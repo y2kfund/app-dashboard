@@ -14,6 +14,7 @@ pnpm preview   # preview built app (http://localhost:5173)
    ```
    for e.g.
    resolved": "git+ssh://git@github.com/y2kfund/app-margin.git#ee098386c00c51f8a3a025424da828b3c6eb25d5",
+   The first 6 charecters ee09838 will match the commit ID shown in github for app-margin
    ```
 3. delete node_modules
 4. npm install Why? This picks up the latest commit ID for margin and puts that inside package-lock.json
