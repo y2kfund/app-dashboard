@@ -104,7 +104,6 @@ onMounted(() => {
         :title="`Click to show ${column.title} app`"
       >
         {{ column.title }}
-        <span class="restore-icon">↩</span>
       </button>
     </div>
 
