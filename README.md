@@ -1,6 +1,4 @@
-# app-dashboard
-
-## Scripts
+## How to run this app?
 To run this app on your local machine you have 2 options:
 
 Option 1: 
