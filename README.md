@@ -22,3 +22,8 @@ npm run build     # production build
 7. as soon as the commit is done cloudflare will do a build and if the build is successful then it will deploy.
 8. Now the dashboard will pick up the margin new commit ID since the package-lock.json for dashboard if referring to the new commit ID
 
+## Why is dist folder not committed for this?
+1. This is not used by other software.
+2. dist folder needs to be committed when this needs to be used by other software.
+3. Once this code reaches cloudflare
+4. Cloudflare does npm run build and then runs the code from the dist folder.
