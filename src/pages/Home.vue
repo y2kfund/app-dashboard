@@ -14,9 +14,7 @@ interface Column {
 
 const columns = ref<Column[]>([
   { id: 'margin', title: 'Margin', content: '', component: Margin },
-  { id: 'positions', title: 'Positions', content: '', component: Positions },
-  { id: 'analytics', title: 'Analytics', content: 'Analytics data will be displayed here.' },
-  { id: 'jaikalimaa', title: 'Jaikalimaa', content: 'Jaikalimaa data will be displayed here.' }
+  { id: 'positions', title: 'Positions', content: '', component: Positions }
 ])
 
 const hiddenColumns = ref<Set<string>>(new Set())
