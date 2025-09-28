@@ -1,13 +1,16 @@
 # app-dashboard
 
-Vue 3 app that renders **"dashboard"**.
-
 ## Scripts
-```bash
-npm install
-npm run dev       # start dev server (http://localhost:5100)
-npm run build     # production build
-```
+To run this app on your local machine you have 2 options:
+
+Option 1: 
+npm run dev       # This will use packages from file://..
+
+Option 2: 
+npm run build       # This will use packages from git
+
+Both these commands will not update the package-lock.json sine package.json specifies --no-save
+
 ## What steps to take when one of the components used by app-dashboard is updated?
 1. delete package-lock.json Why? For e.g. for the component Margin there is a github URL inside package-lock.json that has a commit ID.
    ```
@@ -20,7 +23,7 @@ npm run build     # production build
 5. this creates a new package-lock.json
 6. commit this new package-lock.json
 7. as soon as the commit is done cloudflare will do a build and if the build is successful then it will deploy.
-8. Now the dashboard will pick up the margin new commit ID since the package-lock.json for dashboard if referring to the new commit ID
+8. Now the dashboard will pick up the margin new commit ID since the package-lock.json for dashboard is referring to the new commit ID
 
 ## Why is dist folder not committed for this?
 1. This is not used by other software.
