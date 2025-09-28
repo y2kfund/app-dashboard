@@ -3,10 +3,18 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "_devNotes": {
+    "npm run dev": "uses local packages from ../app-positions and ../app-margin",
+    "npm run build": "uses packages from Git repository for app-positions and app-margin",
+    "dependencies": "The dependencies below are PRODUCTION versions. These are used when npm install is run by cloudflare"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview --port 5173"
+    "dev": "npm run deps:dev && vite",
+    "build": "npm run deps:prod && vite build",
+    "preview": "vite preview --port 5173",
+    "_comment": "deps:dev installs local packages temporarily (--no-save), deps:prod ensures Git repos are used",
+    "deps:dev": "npm install @y2kfund/positions@file:../app-positions @y2kfund/margin@file:../app-margin --no-save",
+    "deps:prod": "npm install @y2kfund/positions@git+https://github.com/y2kfund/app-positions.git @y2kfund/margin@git+https://github.com/y2kfund/app-margin.git --no-save"
   },
   "dependencies": {
     "@y2kfund/core": "git+https://github.com/y2kfund/app-core.git",
@@ -15,6 +23,7 @@
     "vue": "^3.4.0",
     "vue-router": "^4.3.2"
   },
+
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
     "typescript": "^5.4.0",
