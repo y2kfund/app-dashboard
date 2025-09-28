@@ -65,9 +65,9 @@ const updateUrlParams = () => {
 
 const loadFromUrlParams = () => {
   const urlParams = new URLSearchParams(window.location.search)
-  const hiddenParam = urlParams.get('hiddenApps')
-  if (hiddenParam) {
-    hiddenColumns.value = new Set(hiddenParam.split(',').filter(id => 
+  const hiddenAppNamesParam = urlParams.get('hiddenApps')
+  if (hiddenAppNamesParam) {
+    hiddenColumns.value = new Set(hiddenAppNamesParam.split(',').filter(id => 
       columns.value.some(col => col.id === id)
     ))
   }
