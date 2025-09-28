@@ -1,6 +1,6 @@
-# app-dashboard (standalone)
+# app-dashboard
 
-Minimal Vue 3 app that renders **"Welcome to the dashboard"**. This version is standalone and does not use any core/app packages.
+Vue 3 app that renders **"dashboard"**.
 
 ## Scripts
 ```bash
