@@ -4,7 +4,7 @@
 To run this app on your local machine you have 2 options:
 
 Option 1: 
-npm run dev       # This will use packages from file://..
+npm run dev       # This will use packages from file:..
 
 Option 2: 
 npm run build       # This will use packages from git
