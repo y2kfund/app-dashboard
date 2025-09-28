@@ -1,9 +1,33 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, provide } from 'vue'
 import { Positions } from '@y2kfund/positions'
 import { Margin } from '@y2kfund/margin'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/margin/dist/style.css'
+
+// Simple event bus
+const eventBus = {
+  events: {},
+  emit(event: string, data: any) {
+    if (this.events[event]) {
+      this.events[event].forEach((callback: Function) => callback(data));
+    }
+  },
+  on(event: string, callback: Function) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event].push(callback);
+  },
+  off(event: string, callback: Function) {
+    if (this.events[event]) {
+      this.events[event] = this.events[event].filter((cb: Function) => cb !== callback);
+    }
+  }
+};
+
+// Provide the event bus to child components
+provide('eventBus', eventBus);
 
 interface Column {
   id: string
