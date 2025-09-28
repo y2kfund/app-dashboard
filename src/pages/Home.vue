@@ -41,22 +41,22 @@ const columns = ref<Column[]>([
   { id: 'positions', title: 'Positions', content: '', component: Positions }
 ])
 
-const hiddenColumns = ref<Set<string>>(new Set())
+const hiddenApps = ref<Set<string>>(new Set())
 
 // Computed properties
 const visibleColumns = computed(() => 
-  columns.value.filter(col => !hiddenColumns.value.has(col.id))
+  columns.value.filter(col => !hiddenApps.value.has(col.id))
 )
 
 const hiddenAppsList = computed(() => 
-  columns.value.filter(col => hiddenColumns.value.has(col.id))
+  columns.value.filter(col => hiddenApps.value.has(col.id))
 )
 
 // URL query parameter management
 const updateUrlParams = () => {
   const url = new URL(window.location.href)
-  if (hiddenColumns.value.size > 0) {
-    url.searchParams.set('hiddenApps', Array.from(hiddenColumns.value).join(','))
+  if (hiddenApps.value.size > 0) {
+    url.searchParams.set('hiddenApps', Array.from(hiddenApps.value).join(','))
   } else {
     url.searchParams.delete('hiddenApps')
   }
@@ -67,7 +67,7 @@ const loadFromUrlParams = () => {
   const urlParams = new URLSearchParams(window.location.search)
   const hiddenAppNamesParam = urlParams.get('hiddenApps')
   if (hiddenAppNamesParam) {
-    hiddenColumns.value = new Set(hiddenAppNamesParam.split(',').filter(id => 
+    hiddenApps.value = new Set(hiddenAppNamesParam.split(',').filter(id => 
       columns.value.some(col => col.id === id)
     ))
   }
@@ -75,15 +75,15 @@ const loadFromUrlParams = () => {
 
 // Column visibility methods
 const hideColumn = (columnId: string) => {
-  hiddenColumns.value.add(columnId)
+  hiddenApps.value.add(columnId)
 }
 
 const showColumn = (columnId: string) => {
-  hiddenColumns.value.delete(columnId)
+  hiddenApps.value.delete(columnId)
 }
 
 // Watch for changes and update URL
-watch(hiddenColumns, updateUrlParams, { deep: true })
+watch(hiddenApps, updateUrlParams, { deep: true })
 
 // Initialize on mount
 onMounted(() => {
