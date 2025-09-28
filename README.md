@@ -4,10 +4,9 @@ Vue 3 app that renders **"dashboard"**.
 
 ## Scripts
 ```bash
-pnpm install   # or npm install / yarn
-pnpm dev       # start dev server (http://localhost:5100)
-pnpm build     # production build
-pnpm preview   # preview built app (http://localhost:5173)
+npm install
+npm run dev       # start dev server (http://localhost:5100)
+npm run build     # production build
 ```
 ## What steps to take when one of the components used by app-dashboard is updated?
 1. delete package-lock.json Why? For e.g. for the component Margin there is a github URL inside package-lock.json that has a commit ID.
