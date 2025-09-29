@@ -2,6 +2,8 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import './styles.css'
+import './assets/styles/logo.css'
+import './assets/styles/auth-form.css'
 import { createCore } from '@y2kfund/core'
 
 async function initializeApp() {

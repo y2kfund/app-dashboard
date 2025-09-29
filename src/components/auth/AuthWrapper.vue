@@ -1,12 +1,12 @@
 <template>
   <div class="auth-wrapper">
     <div class="auth-container">
-      <div class="auth-header">
+      <!--div class="auth-header">
         <h1>Y2K Fund Dashboard</h1>
         <p v-if="mode === 'login'">Please sign in to access your dashboard</p>
         <p v-else-if="mode === 'signup'">Create your account to get started</p>
         <p v-else-if="mode === 'forgot-password'">Reset your password</p>
-      </div>
+      </div-->
       
       <LoginForm v-if="mode === 'login'" @switch-mode="mode = $event" />
       <SignupForm v-else-if="mode === 'signup'" @switch-mode="mode = $event" />
@@ -35,7 +35,7 @@ const mode = ref<'login' | 'signup' | 'forgot-password'>('login')
 
 .auth-container {
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
   padding: 2rem;
 }
 

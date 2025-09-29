@@ -1,28 +1,49 @@
 <template>
   <div class="auth-form">
-    <h2>Reset Password</h2>
-    <form @submit.prevent="handleResetPassword">
+    <!-- Y2K Fund Gradient Logo -->
+    <div class="logo-container">
+      <div class="logo">
+        <div class="logo-text">
+          <span class="y2k">Y2K</span>
+          <span class="fund">FUND</span>
+        </div>
+        <div class="logo-tagline">Investment Dashboard</div>
+      </div>
+    </div>
+
+    <!-- Reset Password Form -->
+    <form @submit.prevent="handleResetPassword" class="reset-form">
+      <div class="form-header">
+        <h2>Reset Your Password</h2>
+        <p>Enter your email address and we'll send you a link to reset your password.</p>
+      </div>
+      
       <div class="form-group">
-        <label for="email">Email</label>
+        <label for="email">Email Address</label>
         <input
           id="email"
           v-model="email"
           type="email"
+          placeholder="Enter your email"
           required
           :disabled="loading"
-          placeholder="Enter your email address"
         />
       </div>
-      <button type="submit" :disabled="loading">
-        {{ loading ? 'Sending...' : 'Send Reset Link' }}
+      
+      <button type="submit" :disabled="loading || !email.trim()" class="primary-button">
+        {{ loading ? 'Sending Reset Link...' : 'Send Reset Link' }}
       </button>
+      
       <div v-if="error" class="error">{{ error }}</div>
       <div v-if="success" class="success">{{ success }}</div>
     </form>
     
     <div class="auth-links">
       <button @click="$emit('switch-mode', 'login')" class="link-button">
-        Back to Sign In
+        <strong>← Back to Sign In</strong>
+      </button>
+      <button @click="$emit('switch-mode', 'signup')" class="link-button">
+        Don't have an account? <strong>Sign Up</strong>
       </button>
     </div>
   </div>
@@ -43,6 +64,11 @@ const error = ref('')
 const success = ref('')
 
 async function handleResetPassword() {
+  if (!email.value.trim()) {
+    error.value = 'Please enter your email address'
+    return
+  }
+
   loading.value = true
   error.value = ''
   success.value = ''
@@ -53,7 +79,8 @@ async function handleResetPassword() {
     if (authError) {
       error.value = authError.message
     } else {
-      success.value = 'Password reset link sent! Check your email.'
+      success.value = 'Password reset link has been sent to your email. Please check your inbox.'
+      email.value = ''
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'An error occurred'
@@ -63,7 +90,10 @@ async function handleResetPassword() {
 }
 </script>
 
-<style scoped>
+<style>
+@import '../../assets/styles/logo.css';
+@import '../../assets/styles/auth-form.css';
+
 .auth-form {
   max-width: 400px;
   margin: 0 auto;
@@ -71,6 +101,50 @@ async function handleResetPassword() {
   border: 1px solid var(--border-color, #e1e5e9);
   border-radius: 8px;
   background: var(--surface-color, #ffffff);
+}
+
+.logo-container {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo-text {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.y2k {
+  color: var(--primary-color, #3b82f6);
+}
+
+.fund {
+  color: var(--secondary-color, #9333ea);
+}
+
+.logo-tagline {
+  font-size: 1rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-header h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.form-header p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .form-group {
@@ -108,10 +182,6 @@ button {
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.2s;
-}
-
-button:hover:not(:disabled) {
-  background: var(--primary-color-dark, #2563eb);
 }
 
 button:disabled {
