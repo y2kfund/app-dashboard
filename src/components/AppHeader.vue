@@ -286,7 +286,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   text-decoration: none;
   color: #64748b;

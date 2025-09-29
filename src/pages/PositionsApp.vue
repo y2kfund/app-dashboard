@@ -39,14 +39,14 @@ function handleRowClick(row: any) {
 }
 
 .app-header {
-  padding: 2rem;
+  padding: 1rem 2rem;
   background: white;
   border-bottom: 1px solid #dee2e6;
 }
 
 .app-header h1 {
   margin: 0 0 0.5rem 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: #2c3e50;
 }
 
