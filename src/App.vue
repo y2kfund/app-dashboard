@@ -11,15 +11,7 @@
 
     <!-- Show main app if authenticated -->
     <div v-else class="app-layout">
-      <header class="app-header">
-        <div class="header-content">
-          <h1>Y2K Fund Dashboard</h1>
-          <div class="user-menu">
-            <span>Welcome, {{ user?.email }}</span>
-            <button @click="signOut" class="sign-out-btn">Sign Out</button>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
       
       <main class="app-main">
         <RouterView />
@@ -31,9 +23,10 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import AuthWrapper from './components/auth/AuthWrapper.vue'
+import AppHeader from './components/AppHeader.vue'
 import { useAuth } from './composables/useAuth'
 
-const { user, isAuthenticated, loading: authLoading, signOut } = useAuth()
+const { isAuthenticated, loading: authLoading } = useAuth()
 </script>
 
 <style scoped>
@@ -65,46 +58,6 @@ const { user, isAuthenticated, loading: authLoading, signOut } = useAuth()
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-.app-header {
-  background: var(--surface-color, #ffffff);
-  border-bottom: 1px solid var(--border-color, #e1e5e9);
-  padding: 1rem 0;
-}
-
-.header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-content h1 {
-  margin: 0;
-  color: var(--text-color, #111827);
-}
-
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.sign-out-btn {
-  padding: 0.5rem 1rem;
-  background: var(--error-color, #dc2626);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.sign-out-btn:hover {
-  background: var(--error-color-dark, #b91c1c);
 }
 
 .app-main {
