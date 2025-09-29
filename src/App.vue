@@ -62,7 +62,7 @@ const { isAuthenticated, loading: authLoading } = useAuth()
 
 .app-main {
   flex: 1;
-  padding: 2rem;
+  padding: 0;
   margin: 0 auto;
   width: 100%;
 }
