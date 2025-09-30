@@ -31,3 +31,7 @@ button.columns-btn {
 button.graph-icon {
     width: auto;
 }
+.filters-tags button {
+    width: auto;
+    padding: 0;
+}
