@@ -47,7 +47,7 @@
             <path d="M2 17l10 5 10-5"/>
             <path d="M2 12l10 5 10-5"/>
           </svg>
-          <span>Ask AI</span>
+          <span>Analyze</span>
         </button>
       </div>
       
