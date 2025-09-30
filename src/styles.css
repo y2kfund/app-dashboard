@@ -16,3 +16,18 @@ body {
   place-items: center;
   padding: 2rem;
 }
+button.row-status {
+    width: auto;
+}
+label.popup-item input {
+    width: auto;
+}
+.popup-actions .btn {
+    color: #000;
+}
+button.columns-btn {
+    padding: inherit;
+}
+button.graph-icon {
+    width: auto;
+}
