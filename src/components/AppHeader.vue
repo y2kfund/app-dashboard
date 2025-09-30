@@ -13,7 +13,7 @@
       </div>
       
       <!-- Navigation menu -->
-      <nav class="nav-menu">
+      <!--nav class="nav-menu">
         <router-link to="/" class="nav-link" exact-active-class="active">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -37,7 +37,19 @@
           </svg>
           <span>Margin</span>
         </router-link>
-      </nav>
+      </nav-->
+
+      <!-- AI Assistant Button -->
+      <div class="ai-assistant">
+        <button @click="openAIModal" class="ai-button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          <span>Ask AI</span>
+        </button>
+      </div>
       
       <!-- User menu -->
       <div class="user-menu">
@@ -87,46 +99,7 @@
             <div class="dropdown-divider"></div>
             
             <div class="dropdown-section">
-              <router-link 
-                to="/" 
-                class="dropdown-item nav-item" 
-                @click="closeDropdown"
-                exact-active-class="active"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9,22 9,12 15,12 15,22"/>
-                </svg>
-                Home
-              </router-link>
-              
-              <router-link 
-                to="/positions" 
-                class="dropdown-item nav-item" 
-                @click="closeDropdown"
-                active-class="active"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                Positions
-              </router-link>
-              
-              <router-link 
-                to="/margin" 
-                class="dropdown-item nav-item" 
-                @click="closeDropdown"
-                active-class="active"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="1" x2="12" y2="23"/>
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                </svg>
-                Margin
-              </router-link>
+              <span class="dropdown-section-title">Settings</span>
             </div>
             
             <div class="dropdown-divider"></div>
@@ -145,16 +118,24 @@
         </div>
       </div>
     </div>
+
+    <!-- AI Modal -->
+    <AIAssistantModal 
+      v-if="showAIModal" 
+      @close="closeAIModal"
+    />
   </header>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '../composables/useAuth'
+import AIAssistantModal from './AIAssistantModal.vue'
 
 const { user, signOut } = useAuth()
 const isDropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement>()
+const showAIModal = ref(false)
 
 // Computed properties for user display
 const userName = computed(() => {
@@ -188,6 +169,14 @@ const closeDropdown = () => {
 const handleSignOut = () => {
   closeDropdown()
   signOut()
+}
+
+const openAIModal = () => {
+  showAIModal.value = true
+}
+
+const closeAIModal = () => {
+  showAIModal.value = false
 }
 
 // Close dropdown when clicking outside
@@ -345,6 +334,39 @@ onUnmounted(() => {
 
 .nav-link span {
   white-space: nowrap;
+}
+
+/* AI Assistant Button */
+.ai-assistant {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ai-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.ai-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.ai-button svg {
+  flex-shrink: 0;
 }
 
 /* User menu dropdown */

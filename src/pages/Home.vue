@@ -115,7 +115,7 @@ onMounted(() => {
       >
         <section class="card">
           <div class="card-header">
-            <h1 v-if="column.id === 'margin'" class="card-title">Margin</h1>
+            <h1 v-if="column.id === 'margin'" class="card-title">Summary</h1>
             <h2 v-else class="card-title">{{ column.title }}</h2>
             <button 
               @click="hideColumn(column.id)"

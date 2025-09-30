@@ -18,12 +18,12 @@
   },
   "dependencies": {
     "@y2kfund/core": "git+https://github.com/y2kfund/app-core.git",
-    "@y2kfund/positions": "git+https://github.com/y2kfund/app-positions.git",
     "@y2kfund/margin": "git+https://github.com/y2kfund/app-margin.git",
+    "@y2kfund/positions": "git+https://github.com/y2kfund/app-positions.git",
+    "html2canvas": "^1.4.1",
     "vue": "^3.4.0",
     "vue-router": "^4.3.2"
   },
-
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
     "typescript": "^5.4.0",
