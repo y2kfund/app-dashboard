@@ -36,54 +36,67 @@ interface Column {
   component?: any
 }
 
+type ComponentMode = 'window' | 'tab'
+
 const columns = ref<Column[]>([
   { id: 'summary', title: 'Summary', content: '', component: Summary },
   { id: 'positions', title: 'Positions', content: '', component: Positions }
 ])
 
-const hiddenApps = ref<Set<string>>(new Set())
+// Track mode for each component (window = visible, tab = minimized)
+const componentModes = ref<Record<string, ComponentMode>>({
+  summary: 'window',
+  positions: 'window'
+})
 
 // Computed properties
-const visibleColumns = computed(() => 
-  columns.value.filter(col => !hiddenApps.value.has(col.id))
+const windowColumns = computed(() => 
+  columns.value.filter(col => componentModes.value[col.id] === 'window')
 )
 
-const hiddenAppsList = computed(() => 
-  columns.value.filter(col => hiddenApps.value.has(col.id))
+const tabColumns = computed(() => 
+  columns.value.filter(col => componentModes.value[col.id] === 'tab')
 )
 
 // URL query parameter management
 const updateUrlParams = () => {
   const url = new URL(window.location.href)
-  if (hiddenApps.value.size > 0) {
-    url.searchParams.set('hiddenApps', Array.from(hiddenApps.value).join(','))
+  const tabModeApps = Object.entries(componentModes.value)
+    .filter(([_, mode]) => mode === 'tab')
+    .map(([id]) => id)
+  
+  if (tabModeApps.length > 0) {
+    url.searchParams.set('minimizedApps', tabModeApps.join(','))
   } else {
-    url.searchParams.delete('hiddenApps')
+    url.searchParams.delete('minimizedApps')
   }
   window.history.replaceState({}, '', url.toString())
 }
 
 const loadFromUrlParams = () => {
   const urlParams = new URLSearchParams(window.location.search)
-  const hiddenAppNamesParam = urlParams.get('hiddenApps')
-  if (hiddenAppNamesParam) {
-    hiddenApps.value = new Set(hiddenAppNamesParam.split(',').filter(id => 
+  const minimizedAppsParam = urlParams.get('minimizedApps')
+  if (minimizedAppsParam) {
+    const minimizedIds = minimizedAppsParam.split(',').filter(id => 
       columns.value.some(col => col.id === id)
-    ))
+    )
+    minimizedIds.forEach(id => {
+      componentModes.value[id] = 'tab'
+    })
   }
 }
 
-// Column visibility methods
-const hideColumn = (columnId: string) => {
-  hiddenApps.value.add(columnId)
+// Component mode management
+const handleMinimize = (columnId: string) => {
+  componentModes.value[columnId] = 'tab'
 }
 
-const showColumn = (columnId: string) => {
-  hiddenApps.value.delete(columnId)
+const handleRestore = (columnId: string) => {
+  componentModes.value[columnId] = 'window'
 }
 
 // Watch for changes and update URL
-watch(hiddenApps, updateUrlParams, { deep: true })
+watch(componentModes, updateUrlParams, { deep: true })
 
 // Initialize on mount
 onMounted(() => {
@@ -93,15 +106,15 @@ onMounted(() => {
 
 <template>
   <main class="dashboard">
-    <!-- Hidden apps tags -->
-    <div v-if="hiddenAppsList.length > 0" class="hidden-apps-bar">
-      <span class="hidden-apps-label">Hidden apps:</span>
+    <!-- Minimized apps tabs bar -->
+    <div v-if="tabColumns.length > 0" class="tabs-bar">
+      <span class="tabs-label">Minimized:</span>
       <button
-        v-for="column in hiddenAppsList"
-        :key="`hidden-${column.id}`"
-        @click="showColumn(column.id)"
-        class="hidden-app-tag"
-        :title="`Click to show ${column.title} app`"
+        v-for="column in tabColumns"
+        :key="`tab-${column.id}`"
+        @click="handleRestore(column.id)"
+        class="app-tab"
+        :title="`Click to restore ${column.title} app`"
       >
         {{ column.title }}
       </button>
@@ -109,31 +122,19 @@ onMounted(() => {
 
     <div class="dashboard-grid">
       <div 
-        v-for="column in visibleColumns" 
+        v-for="column in windowColumns" 
         :key="column.id"
         class="dashboard-column"
       >
         <section class="card">
-          <div class="card-header">
-            <h1 v-if="column.id === 'summary'" class="card-title">Summary</h1>
-            <h2 v-else class="card-title">{{ column.title }}</h2>
-            <button 
-              @click="hideColumn(column.id)"
-              class="hide-button"
-              :title="`Hide ${column.title} app`"
-            >
-              −
-            </button>
-          </div>
-
           <!-- Summary content -->
           <template v-if="column.id === 'summary'">
-            <Summary :show-header-link="true" />
+            <Summary :show-header-link="true" @minimize="handleMinimize('summary')" />
           </template>
           
           <!-- Positions component -->
           <template v-else-if="column.id === 'positions'">
-            <Positions accountId="demo" :show-header-link="true" />
+            <Positions accountId="demo" :show-header-link="true" @minimize="handleMinimize('positions')" />
           </template>
           
           <!-- Other column content -->
@@ -153,7 +154,7 @@ onMounted(() => {
   background-color: #f8fafc;
 }
 
-.hidden-apps-bar {
+.tabs-bar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -165,17 +166,17 @@ onMounted(() => {
   box-shadow: 0 1px 3px rgba(0,0,0,.05);
 }
 
-.hidden-apps-label {
+.tabs-label {
   font-size: 0.875rem;
   color: #6b7280;
   font-weight: 500;
 }
 
-.hidden-app-tag {
+.app-tab {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   background: #f3f4f6;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
@@ -185,15 +186,10 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.hidden-app-tag:hover {
+.app-tab:hover {
   background: #e5e7eb;
   border-color: #9ca3af;
   transform: translateY(-1px);
-}
-
-.restore-icon {
-  font-size: 0.75rem;
-  color: #6b7280;
 }
 
 .dashboard-grid {
@@ -221,53 +217,6 @@ onMounted(() => {
   height: fit-content;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.5rem;
-}
-
-.card-title {
-  margin: 0;
-  color: #1f2937;
-}
-
-h1.card-title { 
-  font-size: 1.6rem; 
-}
-
-h2.card-title {
-  font-size: 1.4rem;
-}
-
-.hide-button {
-  background: #f9fafb;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  width: 1.75rem;
-  height: 1.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #6b7280;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.hide-button:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
-  color: #374151;
-  transform: scale(1.05);
-}
-
-.hide-button:active {
-  transform: scale(0.95);
-}
-
 p { 
   margin: 0; 
   color: #6b7280; 
@@ -281,7 +230,7 @@ p {
     grid-auto-columns: unset;
   }
   
-  .hidden-apps-bar {
+  .tabs-bar {
     flex-wrap: wrap;
   }
 }
