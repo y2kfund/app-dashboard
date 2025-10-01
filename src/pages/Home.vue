@@ -128,7 +128,7 @@ onMounted(() => {
 
           <!-- Summary content -->
           <template v-if="column.id === 'summary'">
-            <Summary/>
+            <Summary :show-header-link="true" />
           </template>
           
           <!-- Positions component -->
