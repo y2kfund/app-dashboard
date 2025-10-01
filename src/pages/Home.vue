@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, provide } from 'vue'
 import { Positions } from '@y2kfund/positions'
-import { Margin } from '@y2kfund/margin'
+import { Margin } from '@y2kfund/summary'
 import '@y2kfund/positions/dist/style.css'
-import '@y2kfund/margin/dist/style.css'
+import '@y2kfund/summary/dist/style.css'
 
 // Simple event bus
 const eventBus = {

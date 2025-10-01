@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Margin } from '@y2kfund/margin'
-import '@y2kfund/margin/dist/style.css'
+import { Margin } from '@y2kfund/summary'
+import '@y2kfund/summary/dist/style.css'
 
 interface Props {
   accountId?: string

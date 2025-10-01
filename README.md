@@ -13,8 +13,8 @@ Both these commands will not update the package-lock.json sine package.json spec
 1. delete package-lock.json Why? For e.g. for the component Margin there is a github URL inside package-lock.json that has a commit ID.
    ```
    for e.g.
-   resolved": "git+ssh://git@github.com/y2kfund/app-margin.git#ee098386c00c51f8a3a025424da828b3c6eb25d5",
-   The first 6 charecters ee09838 will match the commit ID shown in github for app-margin
+   resolved": "git+ssh://git@github.com/y2kfund/app-summary.git#ee098386c00c51f8a3a025424da828b3c6eb25d5",
+   The first 6 charecters ee09838 will match the commit ID shown in github for app-summary
    ```
 3. delete node_modules
 4. npm install Why? This picks up the latest commit ID for margin and puts that inside package-lock.json
