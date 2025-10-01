@@ -133,7 +133,7 @@ onMounted(() => {
           
           <!-- Positions component -->
           <template v-else-if="column.id === 'positions'">
-            <Positions accountId="demo" />
+            <Positions accountId="demo" :show-header-link="true" />
           </template>
           
           <!-- Other column content -->

@@ -26,6 +26,7 @@ function handleRowClick(row: any) {
     <main class="app-content">
       <Positions 
         :account-id="accountId"
+        :show-header-link="false"
         @row-click="handleRowClick"
       />
     </main>
