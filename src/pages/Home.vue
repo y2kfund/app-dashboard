@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, provide } from 'vue'
 import { Positions } from '@y2kfund/positions'
-import { Margin } from '@y2kfund/summary'
+import { Summary } from '@y2kfund/summary'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
 
@@ -37,7 +37,7 @@ interface Column {
 }
 
 const columns = ref<Column[]>([
-  { id: 'margin', title: 'Margin', content: '', component: Margin },
+  { id: 'margin', title: 'Margin', content: '', component: Summary },
   { id: 'positions', title: 'Positions', content: '', component: Positions }
 ])
 

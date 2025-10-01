@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Margin } from '@y2kfund/summary'
+import { Summary } from '@y2kfund/summary'
 import '@y2kfund/summary/dist/style.css'
 
 interface Props {
@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
       </nav>
     </header>
     <main class="app-content">
-      <Margin :account-id="accountId" />
+      <Summary :account-id="accountId" />
     </main>
   </div>
 </template>
