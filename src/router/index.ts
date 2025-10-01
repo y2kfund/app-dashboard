@@ -11,7 +11,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: Home },
     { path: '/positions/:accountId?', name: 'positions', component: PositionsApp, props: true },
-    { path: '/margin/:accountId?', name: 'margin', component: SummaryApp, props: true },
+    { path: '/summary/:accountId?', name: 'summary', component: SummaryApp, props: true },
     { path: '/auth/callback', name: 'auth-callback', component: AuthCallback },
     // Catch-all fallback
     { path: '/:pathMatch(.*)*', redirect: '/' }
