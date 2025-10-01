@@ -37,7 +37,7 @@ interface Column {
 }
 
 const columns = ref<Column[]>([
-  { id: 'margin', title: 'Margin', content: '', component: Summary },
+  { id: 'summary', title: 'Summary', content: '', component: Summary },
   { id: 'positions', title: 'Positions', content: '', component: Positions }
 ])
 
@@ -115,7 +115,7 @@ onMounted(() => {
       >
         <section class="card">
           <div class="card-header">
-            <h1 v-if="column.id === 'margin'" class="card-title">Summary</h1>
+            <h1 v-if="column.id === 'summary'" class="card-title">Summary</h1>
             <h2 v-else class="card-title">{{ column.title }}</h2>
             <button 
               @click="hideColumn(column.id)"
@@ -125,10 +125,10 @@ onMounted(() => {
               −
             </button>
           </div>
-          
-          <!-- Margin content (formerly welcome) -->
-          <template v-if="column.id === 'margin'">
-            <Margin/>
+
+          <!-- Summary content -->
+          <template v-if="column.id === 'summary'">
+            <Summary/>
           </template>
           
           <!-- Positions component -->
