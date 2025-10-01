@@ -3,7 +3,7 @@ import { useSupabase } from '@y2kfund/core'
 
 const Home = () => import('../pages/Home.vue')
 const PositionsApp = () => import('../pages/PositionsApp.vue')
-const MarginApp = () => import('../pages/MarginApp.vue')
+const SummaryApp = () => import('../pages/SummaryApp.vue')
 const AuthCallback = () => import('../pages/AuthCallback.vue')
 
 const router = createRouter({
@@ -11,7 +11,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: Home },
     { path: '/positions/:accountId?', name: 'positions', component: PositionsApp, props: true },
-    { path: '/margin/:accountId?', name: 'margin', component: MarginApp, props: true },
+    { path: '/margin/:accountId?', name: 'margin', component: SummaryApp, props: true },
     { path: '/auth/callback', name: 'auth-callback', component: AuthCallback },
     // Catch-all fallback
     { path: '/:pathMatch(.*)*', redirect: '/' }
