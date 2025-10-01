@@ -12,11 +12,11 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <div class="margin-app">
+  <div class="summary-app">
     <header class="app-header">
-      <h1>Margin</h1>
+      <h1>Summary</h1>
       <nav class="breadcrumb">
-        <router-link to="/">Dashboard</router-link> / Margin
+        <router-link to="/">Dashboard</router-link> / Summary
       </nav>
     </header>
     <main class="app-content">
@@ -26,7 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
 </template>
 
 <style scoped>
-.margin-app {
+.summary-app {
   min-height: 100vh;
   background: #f8f9fa;
 }
