@@ -120,7 +120,7 @@
     </div>
 
     <!-- AI Modal -->
-    <AIAssistantModal 
+    <AnalyzeChat 
       v-if="showAIModal" 
       @close="closeAIModal"
     />
@@ -130,7 +130,8 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '../composables/useAuth'
-import AIAssistantModal from './AIAssistantModal.vue'
+import { AnalyzeChat } from '@y2kfund/analyze-chat'
+import '@y2kfund/analyze-chat/dist/style.css'
 
 const { user, signOut } = useAuth()
 const isDropdownOpen = ref(false)
