@@ -122,7 +122,10 @@
     <!-- AI Modal -->
     <AnalyzeChat 
       v-if="showAIModal" 
+      :config="analyzeChatConfig"
       @close="closeAIModal"
+      @conversation-added="handleConversationAdded"
+      @error="handleAnalyzeChatError"
     />
   </header>
 </template>
@@ -130,13 +133,23 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '../composables/useAuth'
+import { useSupabase } from '@y2kfund/core'
 import { AnalyzeChat } from '@y2kfund/analyze-chat'
+import type { AnalyzeChatConfig, Conversation } from '@y2kfund/analyze-chat'
 import '@y2kfund/analyze-chat/dist/style.css'
 
 const { user, signOut } = useAuth()
+const supabase = useSupabase()
 const isDropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement>()
 const showAIModal = ref(false)
+
+// AnalyzeChat configuration with database support
+const analyzeChatConfig = computed<AnalyzeChatConfig>(() => ({
+  supabaseClient: supabase,
+  user: user.value,
+  enableDatabase: true
+}))
 
 // Computed properties for user display
 const userName = computed(() => {
@@ -155,7 +168,7 @@ const userAvatar = computed(() => {
     return user.value.user_metadata.avatar_url
   }
   // Generate a simple avatar based on user's initials
-  const initials = userName.value.split(' ').map(n => n[0]).join('').toUpperCase()
+  const initials = userName.value.split(' ').map((n: string) => n[0]).join('').toUpperCase()
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=3b82f6&color=fff&size=40`
 })
 
@@ -178,6 +191,20 @@ const openAIModal = () => {
 
 const closeAIModal = () => {
   showAIModal.value = false
+}
+
+// Handle conversation added event from AnalyzeChat
+const handleConversationAdded = (conversation: Conversation) => {
+  console.log('[AppHeader] New conversation added:', conversation)
+  // You can add additional handling here if needed
+  // e.g., show a success notification, update analytics, etc.
+}
+
+// Handle errors from AnalyzeChat
+const handleAnalyzeChatError = (error: Error) => {
+  console.error('[AppHeader] AnalyzeChat error:', error)
+  // You can add additional error handling here if needed
+  // e.g., show error notification, log to error tracking service, etc.
 }
 
 // Close dropdown when clicking outside
