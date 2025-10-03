@@ -42,6 +42,7 @@
       <!-- Timeline Component -->
       <div class="timeline-wrapper">
         <AnalyzeTimeline 
+          :config="timelineConfig"
           @event-selected="handleTimelineEventSelected"
           @navigate="handleTimelineNavigate"
         />
@@ -134,6 +135,15 @@
       @conversation-added="handleConversationAdded"
       @error="handleAnalyzeChatError"
     />
+
+    <!-- Conversation Modal -->
+    <ConversationModal
+      :is-open="showConversationModal"
+      :conversations="selectedDateConversations"
+      :date="selectedDate"
+      :loading="isLoadingConversations"
+      @close="closeConversationModal"
+    />
   </header>
 </template>
 
@@ -144,8 +154,9 @@ import { useSupabase } from '@y2kfund/core'
 import { AnalyzeChat } from '@y2kfund/analyze-chat'
 import type { AnalyzeChatConfig, Conversation } from '@y2kfund/analyze-chat'
 import '@y2kfund/analyze-chat/dist/style.css'
-import { AnalyzeTimeline } from '@y2kfund/analyze-timeline'
+import { AnalyzeTimeline, ConversationModal } from '@y2kfund/analyze-timeline'
 import type { TimelineEvent } from '@y2kfund/analyze-timeline'
+import type { AnalyzeTimelineConfig } from '@y2kfund/analyze-timeline/dist/types'
 import '@y2kfund/analyze-timeline/dist/style.css'
 
 const { user, signOut } = useAuth()
@@ -154,10 +165,23 @@ const isDropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement>()
 const showAIModal = ref(false)
 
+// Timeline and conversation modal state
+const showConversationModal = ref(false)
+const selectedDateConversations = ref<Conversation[]>([])
+const selectedDate = ref('')
+const isLoadingConversations = ref(false)
+
 // AnalyzeChat configuration with database support
 const analyzeChatConfig = computed<AnalyzeChatConfig>(() => ({
   supabaseClient: supabase,
   user: user.value,
+  enableDatabase: true
+}))
+
+// AnalyzeTimeline configuration with database support
+const timelineConfig = computed<AnalyzeTimelineConfig>(() => ({
+  supabaseClient: supabase,
+  userId: user.value?.id || '',
   enableDatabase: true
 }))
 
@@ -218,10 +242,47 @@ const handleAnalyzeChatError = (error: Error) => {
 }
 
 // Handle timeline event selection
-const handleTimelineEventSelected = (event: TimelineEvent) => {
+const handleTimelineEventSelected = async (event: TimelineEvent) => {
   console.log('[AppHeader] Timeline event selected:', event)
-  // You can add additional handling here if needed
-  // e.g., navigate to a detail view, show event info, etc.
+  
+  // Open modal and show loading
+  showConversationModal.value = true
+  isLoadingConversations.value = true
+  selectedDate.value = event.id // event.id is the date string (e.g., '2024-03-20')
+  selectedDateConversations.value = []
+
+  try {
+    // Fetch conversations for the selected date
+    const dateStr = event.id
+    const startOfDay = `${dateStr}T00:00:00`
+    const endOfDay = `${dateStr}T23:59:59`
+
+    const { data, error } = await supabase
+      .schema('hf')
+      .from('ai_conversations')
+      .select('*')
+      .eq('user_id', user.value?.id)
+      .gte('created_at', startOfDay)
+      .lte('created_at', endOfDay)
+      .order('created_at', { ascending: true }) // Oldest first
+
+    if (error) {
+      throw error
+    }
+
+    selectedDateConversations.value = data || []
+  } catch (error) {
+    console.error('[AppHeader] Error fetching conversations:', error)
+    selectedDateConversations.value = []
+  } finally {
+    isLoadingConversations.value = false
+  }
+}
+
+const closeConversationModal = () => {
+  showConversationModal.value = false
+  selectedDateConversations.value = []
+  selectedDate.value = ''
 }
 
 // Handle timeline navigation
