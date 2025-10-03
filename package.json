@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@y2kfund/analyze-chat": "git+https://github.com/y2kfund/app-analyze-chat.git",
+    "@y2kfund/analyze-timeline": "git+https://github.com/y2kfund/app-analyze-timeline.git",
     "@y2kfund/core": "git+https://github.com/y2kfund/app-core.git",
     "@y2kfund/summary": "git+https://github.com/y2kfund/app-summary.git",
     "@y2kfund/positions": "git+https://github.com/y2kfund/app-positions.git",
@@ -29,7 +30,7 @@
     "build": "npm run deps:prod && vite build",
     "preview": "vite preview --port 5173",
     "_comment": "deps:dev installs local packages temporarily (--no-save), deps:prod ensures Git repos are used",
-    "deps:dev": "npm install @y2kfund/analyze-chat@file:../app-analyze-chat @y2kfund/positions@file:../app-positions @y2kfund/summary@file:../app-summary --no-save",
-    "deps:prod": "npm install @y2kfund/analyze-chat@git+https://github.com/y2kfund/app-analyze-chat.git @y2kfund/positions@git+https://github.com/y2kfund/app-positions.git @y2kfund/summary@git+https://github.com/y2kfund/app-summary.git --no-save"
+    "deps:dev": "npm install @y2kfund/analyze-chat@file:../app-analyze-chat @y2kfund/analyze-timeline@file:../app-analyze-timeline @y2kfund/positions@file:../app-positions @y2kfund/summary@file:../app-summary --no-save",
+    "deps:prod": "npm install @y2kfund/analyze-chat@git+https://github.com/y2kfund/app-analyze-chat.git @y2kfund/analyze-timeline@git+https://github.com/y2kfund/app-analyze-timeline.git @y2kfund/positions@git+https://github.com/y2kfund/app-positions.git @y2kfund/summary@git+https://github.com/y2kfund/app-summary.git --no-save"
   }
 }

@@ -39,6 +39,13 @@
         </router-link>
       </nav-->
 
+      <!-- Timeline Component -->
+      <div class="timeline-wrapper">
+        <AnalyzeTimeline 
+          @event-selected="handleTimelineEventSelected"
+          @navigate="handleTimelineNavigate"
+        />
+      </div>
       <!-- AI Assistant Button -->
       <div class="ai-assistant">
         <button @click="openAIModal" class="ai-button">
@@ -137,6 +144,9 @@ import { useSupabase } from '@y2kfund/core'
 import { AnalyzeChat } from '@y2kfund/analyze-chat'
 import type { AnalyzeChatConfig, Conversation } from '@y2kfund/analyze-chat'
 import '@y2kfund/analyze-chat/dist/style.css'
+import { AnalyzeTimeline } from '@y2kfund/analyze-timeline'
+import type { TimelineEvent } from '@y2kfund/analyze-timeline'
+import '@y2kfund/analyze-timeline/dist/style.css'
 
 const { user, signOut } = useAuth()
 const supabase = useSupabase()
@@ -205,6 +215,20 @@ const handleAnalyzeChatError = (error: Error) => {
   console.error('[AppHeader] AnalyzeChat error:', error)
   // You can add additional error handling here if needed
   // e.g., show error notification, log to error tracking service, etc.
+}
+
+// Handle timeline event selection
+const handleTimelineEventSelected = (event: TimelineEvent) => {
+  console.log('[AppHeader] Timeline event selected:', event)
+  // You can add additional handling here if needed
+  // e.g., navigate to a detail view, show event info, etc.
+}
+
+// Handle timeline navigation
+const handleTimelineNavigate = (direction: 'prev' | 'next') => {
+  console.log('[AppHeader] Timeline navigate:', direction)
+  // You can add additional handling here if needed
+  // e.g., update analytics, preload data, etc.
 }
 
 // Close dropdown when clicking outside
@@ -395,6 +419,16 @@ onUnmounted(() => {
 
 .ai-button svg {
   flex-shrink: 0;
+}
+
+/* Timeline Wrapper */
+.timeline-wrapper {
+  flex: 1;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 1rem;
 }
 
 /* User menu dropdown */
