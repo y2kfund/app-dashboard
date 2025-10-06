@@ -12,33 +12,6 @@
         </div>
       </div>
       
-      <!-- Navigation menu -->
-      <!--nav class="nav-menu">
-        <router-link to="/" class="nav-link" exact-active-class="active">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9,22 9,12 15,12 15,22"/>
-          </svg>
-          <span>Home</span>
-        </router-link>
-        <router-link to="/positions" class="nav-link" active-class="active">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-          <span>Positions</span>
-        </router-link>
-        <router-link to="/margin" class="nav-link" active-class="active">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="1" x2="12" y2="23"/>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-          <span>Margin</span>
-        </router-link>
-      </nav-->
-
       <!-- Timeline Component -->
       <div class="timeline-wrapper">
         <AnalyzeTimeline 
@@ -47,6 +20,74 @@
           @navigate="handleTimelineNavigate"
         />
       </div>
+
+      <!-- Custom Reports Dropdown -->
+      <div class="custom-reports" ref="reportsDropdownRef">
+        <button @click="toggleReports" class="reports-button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+          </svg>
+          Custom Reports
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div v-if="showReports" class="reports-dropdown">
+          <!-- Save Current URL Section -->
+          <div class="save-section">
+            <div class="save-form">
+              <input 
+                v-model="newReportName" 
+                type="text" 
+                placeholder="Report name..." 
+                @keyup.enter="handleSaveReport"
+                class="report-input"
+              />
+              <button @click="handleSaveReport" :disabled="!newReportName.trim()" class="save-btn">
+                Save
+              </button>
+            </div>
+            <div class="current-url">
+              <small>Current: {{ currentUrlParams || 'No parameters' }}</small>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Saved Reports List -->
+          <div class="reports-list">
+            <div v-if="isLoading" class="loading">Loading...</div>
+            
+            <div v-else-if="reports.length === 0" class="empty">
+              No saved reports
+            </div>
+            
+            <div v-else>
+              <div 
+                v-for="report in reports" 
+                :key="report.id" 
+                class="report-item"
+              >
+                <div class="report-info">
+                  <span class="report-name">{{ report.name }}</span>
+                  <small class="report-date">{{ formatDate(report.created_at) }}</small>
+                </div>
+                <div class="report-actions">
+                  <button @click="loadReport(report)" class="load-btn">Load</button>
+                  <button @click="copyReportUrl(report)" class="copy-btn" title="Copy URL">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                  </button>
+                  <button @click="deleteReport(report.id)" class="delete-btn">×</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- AI Assistant Button -->
       <div class="ai-assistant">
         <button @click="openAIModal" class="ai-button">
@@ -149,6 +190,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { useSupabase } from '@y2kfund/core'
 import { AnalyzeChat } from '@y2kfund/analyze-chat'
@@ -158,12 +200,21 @@ import { AnalyzeTimeline, ConversationModal } from '@y2kfund/analyze-timeline'
 import type { TimelineEvent } from '@y2kfund/analyze-timeline'
 import type { AnalyzeTimelineConfig } from '@y2kfund/analyze-timeline/dist/types'
 import '@y2kfund/analyze-timeline/dist/style.css'
+import { useCustomReports } from '../composables/useCustomReports'
 
+const router = useRouter()
+const route = useRoute()
 const { user, signOut } = useAuth()
 const supabase = useSupabase()
 const isDropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement>()
 const showAIModal = ref(false)
+
+// Custom Reports
+const showReports = ref(false)
+const reportsDropdownRef = ref<HTMLElement>()
+const newReportName = ref('')
+const { reports, isLoading, loadReports, saveReport, deleteReport } = useCustomReports()
 
 // Timeline and conversation modal state
 const showConversationModal = ref(false)
@@ -206,6 +257,86 @@ const userAvatar = computed(() => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=3b82f6&color=fff&size=40`
 })
 
+const currentUrlParams = computed(() => {
+  const searchParams = new URLSearchParams(window.location.search)
+  return searchParams.toString()
+})
+
+// Custom Reports Functions
+const toggleReports = () => {
+  showReports.value = !showReports.value
+  if (showReports.value) {
+    loadReports()
+  }
+}
+
+const handleSaveReport = async () => {
+  if (!newReportName.value.trim()) return
+  
+  try {
+    await saveReport(newReportName.value)
+    newReportName.value = ''
+    alert('Report saved successfully!')
+  } catch (error) {
+    alert('Failed to save report')
+  }
+}
+
+const loadReport = (report: any) => {
+  if (report.url_params) {
+    // Build the new URL with saved parameters
+    const searchParams = new URLSearchParams(report.url_params)
+    const query: Record<string, string> = {}
+    
+    for (const [key, value] of searchParams.entries()) {
+      query[key] = value
+    }
+    
+    // Create the new URL
+    const newUrl = router.resolve({ 
+      path: route.path,
+      query 
+    }).href
+    
+    // Navigate to the new URL and reload the page
+    window.location.href = newUrl
+  } else {
+    // If no parameters, just navigate to the clean path and reload
+    window.location.href = route.path
+  }
+  
+  showReports.value = false
+}
+
+const copyReportUrl = async (report: any) => {
+  try {
+    let url = window.location.origin + route.path
+    
+    if (report.url_params) {
+      url += '?' + report.url_params
+    }
+    
+    await navigator.clipboard.writeText(url)
+    
+    // Optional: Show a brief success indicator
+    // You could add a toast notification here if you have one
+    alert('URL copied to clipboard!')
+  } catch (error) {
+    console.error('Failed to copy URL:', error)
+    alert('Failed to copy URL')
+  }
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// Other existing functions...
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value
 }
@@ -230,29 +361,23 @@ const closeAIModal = () => {
 // Handle conversation added event from AnalyzeChat
 const handleConversationAdded = (conversation: Conversation) => {
   console.log('[AppHeader] New conversation added:', conversation)
-  // You can add additional handling here if needed
-  // e.g., show a success notification, update analytics, etc.
 }
 
 // Handle errors from AnalyzeChat
 const handleAnalyzeChatError = (error: Error) => {
   console.error('[AppHeader] AnalyzeChat error:', error)
-  // You can add additional error handling here if needed
-  // e.g., show error notification, log to error tracking service, etc.
 }
 
 // Handle timeline event selection
 const handleTimelineEventSelected = async (event: TimelineEvent) => {
   console.log('[AppHeader] Timeline event selected:', event)
   
-  // Open modal and show loading
   showConversationModal.value = true
   isLoadingConversations.value = true
-  selectedDate.value = event.id // event.id is the date string (e.g., '2024-03-20')
+  selectedDate.value = event.id
   selectedDateConversations.value = []
 
   try {
-    // Fetch conversations for the selected date
     const dateStr = event.id
     const startOfDay = `${dateStr}T00:00:00`
     const endOfDay = `${dateStr}T23:59:59`
@@ -264,12 +389,9 @@ const handleTimelineEventSelected = async (event: TimelineEvent) => {
       .eq('user_id', user.value?.id)
       .gte('created_at', startOfDay)
       .lte('created_at', endOfDay)
-      .order('created_at', { ascending: true }) // Oldest first
+      .order('created_at', { ascending: true })
 
-    if (error) {
-      throw error
-    }
-
+    if (error) throw error
     selectedDateConversations.value = data || []
   } catch (error) {
     console.error('[AppHeader] Error fetching conversations:', error)
@@ -285,17 +407,17 @@ const closeConversationModal = () => {
   selectedDate.value = ''
 }
 
-// Handle timeline navigation
 const handleTimelineNavigate = (direction: 'prev' | 'next') => {
   console.log('[AppHeader] Timeline navigate:', direction)
-  // You can add additional handling here if needed
-  // e.g., update analytics, preload data, etc.
 }
 
-// Close dropdown when clicking outside
+// Close dropdowns when clicking outside
 const handleClickOutside = (event: Event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     closeDropdown()
+  }
+  if (reportsDropdownRef.value && !reportsDropdownRef.value.contains(event.target as Node)) {
+    showReports.value = false
   }
 }
 
@@ -330,7 +452,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 3rem;
+  gap: 1rem;
 }
 
 /* Brand section */
@@ -698,17 +820,6 @@ onUnmounted(() => {
   color: #3b82f6;
 }
 
-/* Navigation item active states */
-.nav-item.active {
-  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.nav-item.active svg {
-  color: #3b82f6;
-}
-
 .sign-out-item {
   color: #dc2626;
   margin-top: 0.25rem;
@@ -727,10 +838,210 @@ onUnmounted(() => {
   color: #dc2626;
 }
 
+/* Custom Reports Dropdown */
+.custom-reports {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.reports-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+}
+
+.reports-button:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.reports-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 350px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.save-section {
+  padding: 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.save-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.report-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.report-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.save-btn {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  width: auto;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.save-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.current-url {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.current-url small {
+  word-break: break-all;
+}
+
+.divider {
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.reports-list {
+  padding: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.loading, .empty {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.report-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.report-item:hover {
+  background: #f1f5f9;
+}
+
+.report-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.report-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-date {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.report-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.load-btn, .copy-btn, .delete-btn {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.load-btn {
+  background: #10b981;
+  color: white;
+}
+
+.load-btn:hover {
+  background: #059669;
+}
+
+.copy-btn {
+  background: #6366f1;
+  color: white;
+  width: 28px;
+  height: 24px;
+}
+
+.copy-btn:hover {
+  background: #4f46e5;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  width: 24px;
+  height: 24px;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+}
+
 /* Responsive design */
 @media (max-width: 1024px) {
   .header-content {
-    gap: 2rem;
+    gap: 1rem;
   }
 }
 
@@ -748,20 +1059,6 @@ onUnmounted(() => {
     font-size: 0.65rem;
   }
   
-  .nav-menu {
-    gap: 0.25rem;
-    padding: 0.375rem;
-  }
-  
-  .nav-link {
-    padding: 0.625rem 1rem;
-    font-size: 0.8rem;
-  }
-  
-  .nav-link span {
-    display: none;
-  }
-  
   .user-info {
     display: none;
   }
@@ -772,26 +1069,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 640px) {
-  .nav-menu {
-    order: 3;
-    flex: none;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-  }
-  
-  .nav-link {
-    padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    border-radius: 8px;
-  }
-  
-  .user-menu {
-    order: 2;
-  }
-  
   .brand .logo-text {
     font-size: 1.25rem;
   }
