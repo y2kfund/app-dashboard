@@ -3,7 +3,7 @@
     <div class="header-content">
       <!-- Logo and brand -->
       <div class="brand">
-        <router-link to="/" class="logo-link">
+        <a href="/" class="logo-link">
           <div class="logo">
             <div class="logo-text">
               <span class="y2k">Y2K</span>
@@ -11,7 +11,7 @@
             </div>
             <div class="logo-tagline">Investment Dashboard</div>
           </div>
-        </router-link>
+        </a>
       </div>
       
       <!-- Timeline Component -->
@@ -23,7 +23,7 @@
         />
       </div>
 
-      <!-- AI Assistant Button -->
+       <!-- AI Assistant Button -->
       <div class="ai-assistant">
         <button @click="openAIModal" class="ai-button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -33,6 +33,96 @@
           </svg>
           <span>Analyze</span>
         </button>
+      </div>
+
+      <!-- Data Refresh Dropdown -->
+      <div class="data-refresh" ref="refreshDropdownRef">
+        <!--button @click="toggleRefresh" class="refresh-button" :disabled="isRefreshing">
+          <svg v-if="!isRefreshing" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"/>
+            <path d="M1 20v-6h6"/>
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+          </svg>
+          <svg v-else class="spinning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 11-6.219-8.56"/>
+          </svg>
+          {{ isRefreshing ? 'Refreshing...' : 'Refresh Data' }}
+        </button-->
+
+        <!-- Dropdown Menu -->
+        <div v-if="showRefresh" class="refresh-dropdown">
+          <div class="refresh-header">
+            <h4>Manual Data Refresh</h4>
+            <p>Update database tables with latest IBKR data</p>
+          </div>
+
+          <div class="refresh-options">
+            <button 
+              @click="refreshData('positions')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <path d="M9 9h6v6H9z"/>
+              </svg>
+              Positions
+            </button>
+
+            <button 
+              @click="refreshData('maintenance-margin')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              Maintenance Margin
+            </button>
+
+            <button 
+              @click="refreshData('nlv')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+              Net Liquidation Value
+            </button>
+
+            <div class="divider"></div>
+
+            <button 
+              @click="refreshAllData" 
+              :disabled="isRefreshing"
+              class="refresh-option refresh-all"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"/>
+                <path d="M1 20v-6h6"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              </svg>
+              Refresh All
+            </button>
+          </div>
+
+          <!-- Status Display -->
+          <div v-if="refreshStatus.length > 0" class="refresh-status">
+            <div class="status-header">Status:</div>
+            <div 
+              v-for="status in refreshStatus" 
+              :key="status.id"
+              class="status-item"
+              :class="status.status"
+            >
+              <span class="status-label">{{ status.label }}:</span>
+              <span class="status-message">{{ status.message }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Custom Reports Dropdown -->
@@ -338,6 +428,110 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Data Refresh state
+const showRefresh = ref(false)
+const refreshDropdownRef = ref<HTMLElement>()
+const isRefreshing = ref(false)
+const refreshStatus = ref<Array<{
+  id: string
+  label: string
+  message: string
+  status: 'loading' | 'success' | 'error'
+}>>([])
+
+// Data Refresh Functions
+const toggleRefresh = () => {
+  showRefresh.value = !showRefresh.value
+  if (!showRefresh.value) {
+    refreshStatus.value = []
+  }
+}
+
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv') => {
+  const labels = {
+    'positions': 'Positions',
+    'maintenance-margin': 'Maintenance Margin',
+    'nlv': 'Net Liquidation Value'
+  }
+
+  const statusId = `refresh-${endpoint}-${Date.now()}`
+  const label = labels[endpoint]
+
+  // Add loading status
+  refreshStatus.value.push({
+    id: statusId,
+    label,
+    message: 'Starting refresh...',
+    status: 'loading'
+  })
+
+  isRefreshing.value = true
+
+  try {
+    const apiBaseUrl = import.meta.env.VITE_IBKR_DATA_FETCH_URL
+    const response = await fetch(`${apiBaseUrl}/fetch/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    
+    // Update status with success
+    const statusIndex = refreshStatus.value.findIndex(s => s.id === statusId)
+    if (statusIndex !== -1) {
+      refreshStatus.value[statusIndex] = {
+        id: statusId,
+        label,
+        message: data.result?.success ? 'Completed successfully' : 'Completed with warnings',
+        status: data.result?.success ? 'success' : 'error'
+      }
+    }
+
+    console.log(`✅ ${label} refresh completed:`, data)
+    
+  } catch (error) {
+    console.error(`❌ ${label} refresh failed:`, error)
+    
+    // Update status with error
+    const statusIndex = refreshStatus.value.findIndex(s => s.id === statusId)
+    if (statusIndex !== -1) {
+      refreshStatus.value[statusIndex] = {
+        id: statusId,
+        label,
+        message: `Failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        status: 'error'
+      }
+    }
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
+const refreshAllData = async () => {
+  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv'> = [
+    'positions', 
+    'maintenance-margin', 
+    'nlv'
+  ]
+
+  isRefreshing.value = true
+  refreshStatus.value = []
+
+  for (const endpoint of endpoints) {
+    await refreshData(endpoint)
+    // Small delay between requests to avoid overwhelming the server
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+
+  isRefreshing.value = false
+}
+
 // Other existing functions...
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value
@@ -420,6 +614,9 @@ const handleClickOutside = (event: Event) => {
   }
   if (reportsDropdownRef.value && !reportsDropdownRef.value.contains(event.target as Node)) {
     showReports.value = false
+  }
+  if (refreshDropdownRef.value && !refreshDropdownRef.value.contains(event.target as Node)) {
+    showRefresh.value = false
   }
 }
 
@@ -848,6 +1045,197 @@ onUnmounted(() => {
   color: #dc2626;
 }
 
+/* Data Refresh Dropdown */
+.data-refresh {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.refresh-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.refresh-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 300px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.refresh-header {
+  padding: 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.refresh-header h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.refresh-header p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.refresh-options {
+  padding: 0.5rem;
+}
+
+.refresh-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  text-align: left;
+  margin-bottom: 0.25rem;
+}
+
+.refresh-option:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.08);
+  color: #1e293b;
+}
+
+.refresh-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-option svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.refresh-option:hover:not(:disabled) svg {
+  color: #3b82f6;
+}
+
+.refresh-all {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  font-weight: 600;
+}
+
+.refresh-all:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.2);
+  color: #b45309;
+}
+
+.refresh-all svg {
+  color: #f59e0b;
+}
+
+.refresh-status {
+  padding: 1rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.status-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-size: 0.75rem;
+}
+
+.status-label {
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.status-message {
+  flex: 1;
+}
+
+.status-item.loading {
+  color: #3b82f6;
+}
+
+.status-item.success {
+  color: #10b981;
+}
+
+.status-item.error {
+  color: #ef4444;
+}
+
+.status-item.loading .status-label::before {
+  content: "⏳ ";
+}
+
+.status-item.success .status-label::before {
+  content: "✅ ";
+}
+
+.status-item.error .status-label::before {
+  content: "❌ ";
+}
+
 /* Custom Reports Dropdown */
 .custom-reports {
   position: relative;
@@ -882,7 +1270,7 @@ onUnmounted(() => {
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  width: 350px;
+  width: 320px;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -909,10 +1297,11 @@ onUnmounted(() => {
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s ease;
 }
 
 .report-input:focus {
-  outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
@@ -926,12 +1315,12 @@ onUnmounted(() => {
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background-color 0.2s ease;
   width: auto;
 }
 
 .save-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: #2563eb;
 }
 
 .save-btn:disabled {
@@ -942,15 +1331,13 @@ onUnmounted(() => {
 .current-url {
   font-size: 0.75rem;
   color: #64748b;
-}
-
-.current-url small {
   word-break: break-all;
 }
 
 .divider {
   height: 1px;
   background: #e2e8f0;
+  margin: 0.5rem 0;
 }
 
 .reports-list {
@@ -960,7 +1347,7 @@ onUnmounted(() => {
 }
 
 .loading, .empty {
-  padding: 2rem;
+  padding: 1rem;
   text-align: center;
   color: #64748b;
   font-size: 0.875rem;
@@ -972,11 +1359,12 @@ onUnmounted(() => {
   justify-content: space-between;
   padding: 0.75rem;
   border-radius: 6px;
-  transition: background 0.2s ease;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0.25rem;
 }
 
 .report-item:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
 }
 
 .report-info {
@@ -989,9 +1377,7 @@ onUnmounted(() => {
   font-weight: 600;
   color: #1e293b;
   display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .report-date {
@@ -1001,6 +1387,7 @@ onUnmounted(() => {
 
 .report-actions {
   display: flex;
+  align-items: center;
   gap: 0.25rem;
   flex-shrink: 0;
 }
@@ -1012,36 +1399,39 @@ onUnmounted(() => {
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .load-btn {
-  background: #10b981;
+  background: #3b82f6;
   color: white;
+  font-weight: 600;
 }
 
 .load-btn:hover {
-  background: #059669;
+  background: #2563eb;
 }
 
 .copy-btn {
-  background: #6366f1;
+  background: #6b7280;
   color: white;
-  width: 28px;
-  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
 }
 
 .copy-btn:hover {
-  background: #4f46e5;
+  background: #4b5563;
 }
 
 .delete-btn {
   background: #ef4444;
   color: white;
-  width: 24px;
-  height: 24px;
+  font-weight: bold;
+  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .delete-btn:hover {
