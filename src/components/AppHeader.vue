@@ -3,13 +3,15 @@
     <div class="header-content">
       <!-- Logo and brand -->
       <div class="brand">
-        <div class="logo">
-          <div class="logo-text">
-            <span class="y2k">Y2K</span>
-            <span class="fund">FUND</span>
+        <router-link to="/" class="logo-link">
+          <div class="logo">
+            <div class="logo-text">
+              <span class="y2k">Y2K</span>
+              <span class="fund">FUND</span>
+            </div>
+            <div class="logo-tagline">Investment Dashboard</div>
           </div>
-          <div class="logo-tagline">Investment Dashboard</div>
-        </div>
+        </router-link>
       </div>
       
       <!-- Timeline Component -->
@@ -19,6 +21,18 @@
           @event-selected="handleTimelineEventSelected"
           @navigate="handleTimelineNavigate"
         />
+      </div>
+
+      <!-- AI Assistant Button -->
+      <div class="ai-assistant">
+        <button @click="openAIModal" class="ai-button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          <span>Analyze</span>
+        </button>
       </div>
 
       <!-- Custom Reports Dropdown -->
@@ -86,18 +100,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- AI Assistant Button -->
-      <div class="ai-assistant">
-        <button @click="openAIModal" class="ai-button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-            <path d="M2 17l10 5 10-5"/>
-            <path d="M2 12l10 5 10-5"/>
-          </svg>
-          <span>Analyze</span>
-        </button>
       </div>
       
       <!-- User menu -->
@@ -461,6 +463,14 @@ onUnmounted(() => {
   align-items: center;
   gap: 1rem;
   flex-shrink: 0;
+}
+
+.logo-link {
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  padding: 0.25rem;
 }
 
 .brand .logo-text {
