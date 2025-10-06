@@ -35,3 +35,6 @@ button.graph-icon {
     width: auto;
     padding: 0;
 }
+button.graph-btn {
+    width: auto;
+}
