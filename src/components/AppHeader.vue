@@ -37,7 +37,7 @@
 
       <!-- Data Refresh Dropdown -->
       <div class="data-refresh" ref="refreshDropdownRef">
-        <!--button @click="toggleRefresh" class="refresh-button" :disabled="isRefreshing">
+        <button @click="toggleRefresh" class="refresh-button" :disabled="isRefreshing">
           <svg v-if="!isRefreshing" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6"/>
             <path d="M1 20v-6h6"/>
@@ -47,7 +47,7 @@
             <path d="M21 12a9 9 0 11-6.219-8.56"/>
           </svg>
           {{ isRefreshing ? 'Refreshing...' : 'Refresh Data' }}
-        </button-->
+        </button>
 
         <!-- Dropdown Menu -->
         <div v-if="showRefresh" class="refresh-dropdown">
