@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, provide } from 'vue'
+import { ref, computed, watch, onMounted, provide, onBeforeUnmount } from 'vue'
 import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
+import { ConversationModal } from '@y2kfund/analyze-timeline'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
 import { useAuth } from '../composables/useAuth'
+import { eventBus } from '../utils/eventBus'
 
 // Get current user
 const { user } = useAuth()
@@ -12,26 +14,7 @@ const { user } = useAuth()
 // Computed property for current user ID
 const currentUserId = computed(() => user.value?.id || null)
 
-// Simple event bus
-const eventBus = {
-  events: {},
-  emit(event: string, data: any) {
-    if (this.events[event]) {
-      this.events[event].forEach((callback: Function) => callback(data));
-    }
-  },
-  on(event: string, callback: Function) {
-    if (!this.events[event]) {
-      this.events[event] = [];
-    }
-    this.events[event].push(callback);
-  },
-  off(event: string, callback: Function) {
-    if (this.events[event]) {
-      this.events[event] = this.events[event].filter((cb: Function) => cb !== callback);
-    }
-  }
-};
+
 
 // Provide the event bus to child components
 provide('eventBus', eventBus);
@@ -47,13 +30,15 @@ type ComponentMode = 'window' | 'tab'
 
 const columns = ref<Column[]>([
   { id: 'summary', title: 'Summary', content: '', component: Summary },
-  { id: 'positions', title: 'Positions', content: '', component: Positions }
+  { id: 'positions', title: 'Positions', content: '', component: Positions },
+  { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: ConversationModal }
 ])
 
 // Track mode for each component (window = visible, tab = minimized)
 const componentModes = ref<Record<string, ComponentMode>>({
   summary: 'window',
-  positions: 'window'
+  positions: 'window',
+  aiTimelineCard: 'window'
 })
 
 // Computed properties
@@ -106,8 +91,27 @@ const handleRestore = (columnId: string) => {
 watch(componentModes, updateUrlParams, { deep: true })
 
 // Initialize on mount
+const selectedDate = ref('')
+const selectedDateConversations = ref<any[]>([]) // <-- Ensure type is array
+
+const handleTimelineConversations = (payload: { date: string, conversations: any[] }) => {
+  console.log('[Home] Received conversations from AppHeader:', payload)
+  selectedDate.value = payload.date
+  selectedDateConversations.value = payload.conversations // Populating this array shows the card
+}
+
+// NEW: Function to close the card (received via @close from ConversationModal)
+const closeConversationModal = () => {
+  // Clearing the array will hide the card in the template
+  selectedDateConversations.value = []
+  selectedDate.value = ''
+}
 onMounted(() => {
   loadFromUrlParams()
+  eventBus.on('timeline:conversations', handleTimelineConversations) 
+})
+onBeforeUnmount(() => {
+  eventBus.off('timeline:conversations', handleTimelineConversations)
 })
 </script>
 
@@ -128,37 +132,47 @@ onMounted(() => {
     </div>
 
     <div class="dashboard-grid">
-      <div 
-        v-for="column in windowColumns" 
-        :key="column.id"
-        class="dashboard-column"
-      >
-        <section class="card">
-          <!-- Summary content -->
-          <template v-if="column.id === 'summary'">
-            <Summary 
-              :show-header-link="true" 
-              :user-id="currentUserId"
-              @minimize="handleMinimize('summary')" 
-            />
-          </template>
-          
-          <!-- Positions component -->
-          <template v-else-if="column.id === 'positions'">
-            <Positions 
-              accountId="demo" 
-              :show-header-link="true" 
-              :user-id="currentUserId"
-              @minimize="handleMinimize('positions')" 
-            />
-          </template>
-          
-          <!-- Other column content -->
-          <template v-else>
-            <p>{{ column.content }}</p>
-          </template>
-        </section>
-      </div>
+      <template v-for="column in windowColumns" :key="column?.id"> 
+        
+        <div 
+            v-if="column && (column.id !== 'aiTimelineCard' || selectedDateConversations.length > 0)"
+          class="dashboard-column"
+        >
+          <section class="card">
+            <!-- Summary content -->
+            <template v-if="column.id === 'summary'">
+              <Summary 
+                :show-header-link="true" 
+                :user-id="currentUserId"
+                @minimize="handleMinimize('summary')" 
+              />
+            </template>
+            
+            <!-- Positions component -->
+            <template v-else-if="column.id === 'positions'">
+              <Positions 
+                accountId="demo" 
+                :show-header-link="true" 
+                :user-id="currentUserId"
+                @minimize="handleMinimize('positions')" 
+              />
+            </template>
+            <template v-else-if="column.id === 'aiTimelineCard'">
+              <ConversationModal
+                :date="selectedDate"
+                :conversations="selectedDateConversations"
+                :is-open="true"
+                @close="closeConversationModal"
+              />
+
+            </template>
+            <!-- Other column content -->
+            <template v-else>
+              <p>{{ column.content }}</p>
+            </template>
+          </section>
+        </div>
+      </template>
     </div>
   </main>
 </template>

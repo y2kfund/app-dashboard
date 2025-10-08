@@ -269,14 +269,6 @@
       @error="handleAnalyzeChatError"
     />
 
-    <!-- Conversation Modal -->
-    <ConversationModal
-      :is-open="showConversationModal"
-      :conversations="selectedDateConversations"
-      :date="selectedDate"
-      :loading="isLoadingConversations"
-      @close="closeConversationModal"
-    />
   </header>
 </template>
 
@@ -293,6 +285,7 @@ import type { TimelineEvent } from '@y2kfund/analyze-timeline'
 import type { AnalyzeTimelineConfig } from '@y2kfund/analyze-timeline/dist/types'
 import '@y2kfund/analyze-timeline/dist/style.css'
 import { useCustomReports } from '../composables/useCustomReports'
+import { eventBus } from '../utils/eventBus'
 
 const router = useRouter()
 const route = useRoute()
@@ -589,6 +582,10 @@ const handleTimelineEventSelected = async (event: TimelineEvent) => {
 
     if (error) throw error
     selectedDateConversations.value = data || []
+    eventBus.emit('timeline:conversations', {
+      date: selectedDate.value,
+      conversations: selectedDateConversations.value
+    })
   } catch (error) {
     console.error('[AppHeader] Error fetching conversations:', error)
     selectedDateConversations.value = []
