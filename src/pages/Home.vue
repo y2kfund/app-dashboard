@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, provide, onBeforeUnmount } from 'vue'
 import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
-import { ConversationModal } from '@y2kfund/analyze-timeline'
+import { aiAnalyseTimelineConversationCard } from '@y2kfund/analyze-timeline'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
 import { useAuth } from '../composables/useAuth'
@@ -31,7 +31,7 @@ type ComponentMode = 'window' | 'tab'
 const columns = ref<Column[]>([
   { id: 'summary', title: 'Summary', content: '', component: Summary },
   { id: 'positions', title: 'Positions', content: '', component: Positions },
-  { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: ConversationModal }
+  { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard }
 ])
 
 // Track mode for each component (window = visible, tab = minimized)
@@ -100,8 +100,8 @@ const handleTimelineConversations = (payload: { date: string, conversations: any
   selectedDateConversations.value = payload.conversations // Populating this array shows the card
 }
 
-// NEW: Function to close the card (received via @close from ConversationModal)
-const closeConversationModal = () => {
+// NEW: Function to close the card (received via @close from aiAnalyseTimelineConversationCard)
+const closeaiAnalyseTimelineConversationCard = () => {
   // Clearing the array will hide the card in the template
   selectedDateConversations.value = []
   selectedDate.value = ''
@@ -158,11 +158,11 @@ onBeforeUnmount(() => {
               />
             </template>
             <template v-else-if="column.id === 'aiTimelineCard'">
-              <ConversationModal
+              <aiAnalyseTimelineConversationCard
                 :date="selectedDate"
                 :conversations="selectedDateConversations"
                 :is-open="true"
-                @close="closeConversationModal"
+                @close="closeaiAnalyseTimelineConversationCard"
               />
 
             </template>
