@@ -4,6 +4,13 @@ import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
+import { useAuth } from '../composables/useAuth'
+
+// Get current user
+const { user } = useAuth()
+
+// Computed property for current user ID
+const currentUserId = computed(() => user.value?.id || null)
 
 // Simple event bus
 const eventBus = {
@@ -129,12 +136,21 @@ onMounted(() => {
         <section class="card">
           <!-- Summary content -->
           <template v-if="column.id === 'summary'">
-            <Summary :show-header-link="true" @minimize="handleMinimize('summary')" />
+            <Summary 
+              :show-header-link="true" 
+              :user-id="currentUserId"
+              @minimize="handleMinimize('summary')" 
+            />
           </template>
           
           <!-- Positions component -->
           <template v-else-if="column.id === 'positions'">
-            <Positions accountId="demo" :show-header-link="true" @minimize="handleMinimize('positions')" />
+            <Positions 
+              accountId="demo" 
+              :show-header-link="true" 
+              :user-id="currentUserId"
+              @minimize="handleMinimize('positions')" 
+            />
           </template>
           
           <!-- Other column content -->
