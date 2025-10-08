@@ -311,7 +311,8 @@ const isLoadingConversations = ref(false)
 const analyzeChatConfig = computed<AnalyzeChatConfig>(() => ({
   supabaseClient: supabase,
   user: user.value,
-  enableDatabase: true
+  enableDatabase: true,
+  autoLoad: false // Start with a fresh modal every time
 }))
 
 // AnalyzeTimeline configuration with database support
