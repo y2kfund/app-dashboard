@@ -38,6 +38,7 @@ button.graph-icon {
 button.graph-btn {
     width: auto;
 }
-.thesis-btn {
+.thesis-btn, .thesis-group-btn {
   color: #000;
+  width: auto;
 }
