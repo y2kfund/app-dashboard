@@ -42,3 +42,6 @@ button.graph-btn {
   color: #000;
   width: auto;
 }
+.modal-content button {
+    width: auto;
+}
