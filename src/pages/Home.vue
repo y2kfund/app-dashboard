@@ -180,7 +180,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .dashboard {
   min-height: 100vh;
-  padding: 1rem;
+  /*padding: 1rem;*/
   background-color: #f8fafc;
 }
 
@@ -226,25 +226,30 @@ onBeforeUnmount(() => {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  gap: 1.5rem;
+  /* gap: 1.5rem; */
   margin: 0 auto;
 }
 
 .dashboard-column {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  /* gap: 1rem; */
   height: fit-content;
   align-items: stretch;
 }
 
 .card {
-  padding: 1.25rem;
+  padding: 0.8rem;
   border-radius: 0.75rem;
   border: 1px solid rgba(0,0,0,.1);
   box-shadow: 0 2px 8px rgba(0,0,0,.05);
   background: white;
   height: fit-content;
+}
+
+.dashboard-container {
+  padding:0;
+  background-color: none;
 }
 
 p { 
