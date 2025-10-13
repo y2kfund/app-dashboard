@@ -60,6 +60,31 @@ export function useCustomReports() {
     }
   }
 
+  // Update report with current URL (simplified)
+  const updateReport = async (reportId: string) => {
+    if (!user.value?.id) return
+    
+    const urlParams = new URLSearchParams(window.location.search).toString()
+    
+    try {
+      const { error } = await supabase
+        .from('custom_reports')
+        .update({ url_params: urlParams })
+        .eq('id', reportId)
+        .eq('user_id', user.value.id)
+      
+      if (error) {
+        console.error('Update error:', error)
+        throw error
+      }
+      
+      await loadReports() // Refresh list
+    } catch (error) {
+      console.error('Failed to update report:', error)
+      throw error
+    }
+  }
+
   // Delete report
   const deleteReport = async (reportId: string) => {
     if (!user.value?.id) return
@@ -84,6 +109,7 @@ export function useCustomReports() {
     isLoading,
     loadReports,
     saveReport,
+    updateReport,
     deleteReport
   }
 }

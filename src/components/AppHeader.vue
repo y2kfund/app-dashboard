@@ -178,6 +178,13 @@
                 </div>
                 <div class="report-actions">
                   <button @click="loadReport(report)" class="load-btn">Load</button>
+                  <button @click="handleUpdateReport(report.id)" class="update-btn" title="Update with current URL">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M23 4v6h-6"/>
+                      <path d="M1 20v-6h6"/>
+                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                  </button>
                   <button @click="copyReportUrl(report)" class="copy-btn" title="Copy URL">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -299,7 +306,7 @@ const showAIModal = ref(false)
 const showReports = ref(false)
 const reportsDropdownRef = ref<HTMLElement>()
 const newReportName = ref('')
-const { reports, isLoading, loadReports, saveReport, deleteReport } = useCustomReports()
+const { reports, isLoading, loadReports, saveReport, updateReport, deleteReport } = useCustomReports()
 
 // Timeline and conversation modal state
 const showConversationModal = ref(false)
@@ -365,6 +372,15 @@ const handleSaveReport = async () => {
     alert('Report saved successfully!')
   } catch (error) {
     alert('Failed to save report')
+  }
+}
+
+const handleUpdateReport = async (reportId: string) => {
+  try {
+    await updateReport(reportId)
+    alert('Report updated successfully!')
+  } catch (error) {
+    alert('Failed to update report')
   }
 }
 
@@ -1434,6 +1450,25 @@ onUnmounted(() => {
 
 .delete-btn:hover {
   background: #dc2626;
+}
+
+.update-btn {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f59e0b;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+}
+
+.update-btn:hover {
+  background: #d97706;
 }
 
 /* Responsive design */
