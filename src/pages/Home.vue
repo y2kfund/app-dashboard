@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, provide, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
+import { Thesis } from '@y2kfund/thesis'
 import { aiAnalyseTimelineConversationCard } from '@y2kfund/analyze-timeline'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
+import '@y2kfund/thesis/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { eventBus } from '../utils/eventBus'
 
 // Get current user
 const { user } = useAuth()
+const router = useRouter()
 
 // Computed property for current user ID
 const currentUserId = computed(() => user.value?.id || null)
-
-
 
 // Provide the event bus to child components
 provide('eventBus', eventBus);
@@ -31,6 +33,7 @@ type ComponentMode = 'window' | 'tab'
 const columns = ref<Column[]>([
   { id: 'summary', title: 'Summary', content: '', component: Summary },
   { id: 'positions', title: 'Positions', content: '', component: Positions },
+  { id: 'thesis', title: 'Thesis', content: '', component: Thesis },
   { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard }
 ])
 
@@ -38,6 +41,7 @@ const columns = ref<Column[]>([
 const componentModes = ref<Record<string, ComponentMode>>({
   summary: 'window',
   positions: 'window',
+  thesis: 'window',
   aiTimelineCard: 'window'
 })
 
@@ -92,27 +96,32 @@ watch(componentModes, updateUrlParams, { deep: true })
 
 // Initialize on mount
 const selectedDate = ref('')
-const selectedDateConversations = ref<any[]>([]) // <-- Ensure type is array
+const selectedDateConversations = ref<any[]>([])
 
 const handleTimelineConversations = (payload: { date: string, conversations: any[] }) => {
   console.log('[Home] Received conversations from AppHeader:', payload)
   selectedDate.value = payload.date
-  selectedDateConversations.value = payload.conversations // Populating this array shows the card
+  selectedDateConversations.value = payload.conversations
 }
 
-// NEW: Function to close the card (received via @close from aiAnalyseTimelineConversationCard)
 const closeaiAnalyseTimelineConversationCard = () => {
-  // Clearing the array will hide the card in the template
   selectedDateConversations.value = []
   selectedDate.value = ''
 }
+
 onMounted(() => {
   loadFromUrlParams()
   eventBus.on('timeline:conversations', handleTimelineConversations) 
 })
+
 onBeforeUnmount(() => {
   eventBus.off('timeline:conversations', handleTimelineConversations)
 })
+
+// Navigation handlers
+const navigateToThesis = () => {
+  router.push('/thesis')
+}
 </script>
 
 <template>
@@ -133,9 +142,8 @@ onBeforeUnmount(() => {
 
     <div class="dashboard-grid">
       <template v-for="column in windowColumns" :key="column?.id"> 
-        
         <div 
-            v-if="column && (column.id !== 'aiTimelineCard' || selectedDateConversations.length > 0)"
+          v-if="column && (column.id !== 'aiTimelineCard' || selectedDateConversations.length > 0)"
           class="dashboard-column"
         >
           <section class="card">
@@ -157,6 +165,18 @@ onBeforeUnmount(() => {
                 @minimize="handleMinimize('positions')" 
               />
             </template>
+
+            <!-- Thesis component with navigation -->
+            <template v-else-if="column.id === 'thesis'">
+              <Thesis 
+                :show-header-link="true"
+                :user-id="currentUserId"
+                @minimize="handleMinimize('thesis')"
+                @navigate="navigateToThesis"
+              />
+            </template>
+
+            <!-- AI Timeline Card -->
             <template v-else-if="column.id === 'aiTimelineCard'">
               <aiAnalyseTimelineConversationCard
                 :date="selectedDate"
@@ -164,8 +184,8 @@ onBeforeUnmount(() => {
                 :is-open="true"
                 @close="closeaiAnalyseTimelineConversationCard"
               />
-
             </template>
+
             <!-- Other column content -->
             <template v-else>
               <p>{{ column.content }}</p>
