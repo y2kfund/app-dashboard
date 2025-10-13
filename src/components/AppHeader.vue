@@ -93,6 +93,18 @@
               Net Liquidation Value
             </button>
 
+            <button 
+              @click="refreshData('current-market-price')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+              Current Market Prices
+            </button>
+
             <div class="divider"></div>
 
             <button 
@@ -457,11 +469,12 @@ const toggleRefresh = () => {
   }
 }
 
-const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv') => {
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price') => {
   const labels = {
     'positions': 'Positions',
     'maintenance-margin': 'Maintenance Margin',
-    'nlv': 'Net Liquidation Value'
+    'nlv': 'Net Liquidation Value',
+    'current-market-price': 'Current Market Prices'
   }
 
   const statusId = `refresh-${endpoint}-${Date.now()}`
@@ -524,10 +537,11 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv')
 }
 
 const refreshAllData = async () => {
-  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv'> = [
+  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price'> = [
     'positions', 
     'maintenance-margin', 
-    'nlv'
+    'nlv',
+    'current-market-price'
   ]
 
   isRefreshing.value = true
