@@ -185,7 +185,26 @@
                 class="report-item"
               >
                 <div class="report-info">
-                  <span class="report-name">{{ report.name }}</span>
+                  <!-- Editable report name -->
+                  <div v-if="editingReportId === report.id" class="edit-name-form">
+                    <input
+                      v-model="editingReportName"
+                      @keyup.enter="saveReportName(report.id)"
+                      @keyup.esc="cancelEditReportName"
+                      @blur="saveReportName(report.id)"
+                      class="edit-name-input"
+                      type="text"
+                      autofocus
+                    />
+                  </div>
+                  <span 
+                    v-else 
+                    class="report-name" 
+                    @dblclick="startEditReportName(report)"
+                    title="Double-click to edit"
+                  >
+                    {{ report.name }}
+                  </span>
                   <small class="report-date">{{ formatDate(report.created_at) }}</small>
                 </div>
                 <div class="report-actions">
@@ -318,6 +337,8 @@ const showAIModal = ref(false)
 const showReports = ref(false)
 const reportsDropdownRef = ref<HTMLElement>()
 const newReportName = ref('')
+const editingReportId = ref<string | null>(null)
+const editingReportName = ref('')
 const { reports, isLoading, loadReports, saveReport, updateReport, deleteReport } = useCustomReports()
 
 // Timeline and conversation modal state
@@ -655,6 +676,40 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+// Custom Reports Editing Functions
+const startEditReportName = (report: any) => {
+  editingReportId.value = report.id
+  editingReportName.value = report.name
+}
+
+const cancelEditReportName = () => {
+  editingReportId.value = null
+  editingReportName.value = ''
+}
+
+const saveReportName = async (reportId: string) => {
+  if (!editingReportName.value.trim()) {
+    cancelEditReportName()
+    return
+  }
+
+  try {
+    const { error } = await supabase
+      .from('custom_reports')
+      .update({ name: editingReportName.value.trim() })
+      .eq('id', reportId)
+      .eq('user_id', user.value?.id)
+
+    if (error) throw error
+    
+    await loadReports()
+    cancelEditReportName()
+  } catch (error) {
+    console.error('Failed to update report name:', error)
+    alert('Failed to update report name')
+  }
+}
 </script>
 
 <style scoped>
@@ -1406,6 +1461,29 @@ onUnmounted(() => {
   color: #1e293b;
   display: block;
   word-break: break-word;
+  cursor: pointer;
+  padding: 0.125rem;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.report-name:hover {
+  background: #f1f5f9;
+}
+
+.edit-name-form {
+  width: 100%;
+}
+
+.edit-name-input {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .report-date {
