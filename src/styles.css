@@ -43,8 +43,10 @@ button.graph-btn {
   width: auto;
 }
 .modal-content button {
-    width: auto;
+  width: auto;
 }
-.thesis-card button {
-    width: auto;
+/* Tasks specific styles */
+.tasks-card button {
+  width: auto;
+  padding: 0.4rem 0.75rem !important;
 }

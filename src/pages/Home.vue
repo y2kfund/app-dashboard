@@ -4,10 +4,12 @@ import { useRouter } from 'vue-router'
 import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
 import { Thesis } from '@y2kfund/thesis'
+import { Tasks } from '@y2kfund/tasks'
 import { aiAnalyseTimelineConversationCard } from '@y2kfund/analyze-timeline'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
 import '@y2kfund/thesis/dist/style.css'
+import '@y2kfund/tasks/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { eventBus } from '../utils/eventBus'
 
@@ -34,6 +36,7 @@ const columns = ref<Column[]>([
   { id: 'summary', title: 'Summary', content: '', component: Summary },
   { id: 'positions', title: 'Positions', content: '', component: Positions },
   { id: 'thesis', title: 'Thesis', content: '', component: Thesis },
+  { id: 'tasks', title: 'Tasks', content: '', component: Tasks },
   { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard }
 ])
 
@@ -42,6 +45,7 @@ const componentModes = ref<Record<string, ComponentMode>>({
   summary: 'window',
   positions: 'window',
   thesis: 'window',
+  tasks: 'window',
   aiTimelineCard: 'window'
 })
 
@@ -122,6 +126,10 @@ onBeforeUnmount(() => {
 const navigateToThesis = () => {
   router.push('/thesis')
 }
+
+const navigateToTasks = () => {
+  router.push('/tasks')
+}
 </script>
 
 <template>
@@ -173,6 +181,16 @@ const navigateToThesis = () => {
                 :user-id="currentUserId"
                 @minimize="handleMinimize('thesis')"
                 @navigate="navigateToThesis"
+              />
+            </template>
+
+            <!-- Tasks component with navigation -->
+            <template v-else-if="column.id === 'tasks'">
+              <Tasks 
+                :show-header-link="true"
+                :user-id="currentUserId"
+                @minimize="handleMinimize('tasks')"
+                @navigate="navigateToTasks"
               />
             </template>
 

@@ -6,6 +6,7 @@ const PositionsApp = () => import('../pages/PositionsApp.vue')
 const SummaryApp = () => import('../pages/SummaryApp.vue')
 const ThesisApp = () => import('../pages/ThesisApp.vue')
 const AuthCallback = () => import('../pages/AuthCallback.vue')
+const TasksApp = () => import('../pages/TasksApp.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -15,6 +16,12 @@ const router = createRouter({
     { path: '/summary/:accountId?', name: 'summary', component: SummaryApp, props: true },
     { path: '/thesis/:accountId?', name: 'thesis', component: ThesisApp, props: true },
     { path: '/auth/callback', name: 'auth-callback', component: AuthCallback },
+    {
+      path: '/tasks',
+      name: 'tasks',
+      component: TasksApp,
+      meta: { requiresAuth: true }
+    },
     // Catch-all fallback
     { path: '/:pathMatch(.*)*', redirect: '/' }
   ]
