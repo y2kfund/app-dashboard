@@ -163,9 +163,9 @@
                 Save
               </button>
             </div>
-            <div class="current-url">
+            <!--div class="current-url">
               <small>Current: {{ currentUrlParams || 'No parameters' }}</small>
-            </div>
+            </div-->
           </div>
 
           <div class="divider"></div>
@@ -1371,7 +1371,6 @@ const saveReportName = async (reportId: string) => {
 .save-form {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
 }
 
 .report-input {
@@ -1420,7 +1419,7 @@ const saveReportName = async (reportId: string) => {
 .divider {
   height: 1px;
   background: #e2e8f0;
-  margin: 0.5rem 0;
+  margin: 0;
 }
 
 .reports-list {
