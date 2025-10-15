@@ -609,11 +609,10 @@ const handleAnalyzeChatError = (error: Error) => {
   console.error('[AppHeader] AnalyzeChat error:', error)
 }
 
-// Handle timeline event selection
-const handleTimelineEventSelected = async (event: TimelineEvent) => {
-  console.log('[AppHeader] Timeline event selected:', event)
+// Handle timeline event selection - now shows dropdown instead of modal
+const handleTimelineEventSelected = async (event: TimelineEvent, position: { x: number; y: number }) => {
+  console.log('[AppHeader] Timeline event selected:', event, position)
   
-  showConversationModal.value = true
   isLoadingConversations.value = true
   selectedDate.value = event.id
   selectedDateConversations.value = []
@@ -634,9 +633,12 @@ const handleTimelineEventSelected = async (event: TimelineEvent) => {
 
     if (error) throw error
     selectedDateConversations.value = data || []
-    eventBus.emit('timeline:conversations', {
+    
+    // Emit to event bus to show dropdown with conversations
+    eventBus.emit('timeline:show-dropdown', {
       date: selectedDate.value,
-      conversations: selectedDateConversations.value
+      conversations: selectedDateConversations.value,
+      position: position
     })
   } catch (error) {
     console.error('[AppHeader] Error fetching conversations:', error)

@@ -5,7 +5,7 @@ import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
 import { Thesis } from '@y2kfund/thesis'
 import { Tasks } from '@y2kfund/tasks'
-import { aiAnalyseTimelineConversationCard } from '@y2kfund/analyze-timeline'
+import { aiAnalyseTimelineConversationCard, ConversationDropdown } from '@y2kfund/analyze-timeline'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
 import '@y2kfund/thesis/dist/style.css'
@@ -103,25 +103,47 @@ watch(componentModes, updateUrlParams, { deep: true })
 // Initialize on mount
 const selectedDate = ref('')
 const selectedDateConversations = ref<any[]>([])
+const showDropdown = ref(false)
+const dropdownPosition = ref({ x: 0, y: 0 })
+const selectedConversation = ref<any>(null)
 
-const handleTimelineConversations = (payload: { date: string, conversations: any[] }) => {
-  console.log('[Home] Received conversations from AppHeader:', payload)
+const handleTimelineShowDropdown = (payload: { date: string, conversations: any[], position: { x: number, y: number } }) => {
+  console.log('[Home] Showing dropdown with conversations:', payload)
   selectedDate.value = payload.date
   selectedDateConversations.value = payload.conversations
+  dropdownPosition.value = payload.position
+  showDropdown.value = true
+}
+
+const handleConversationSelected = async (conversationId: string) => {
+  console.log('[Home] Conversation selected:', conversationId)
+  
+  // Find the selected conversation
+  const conversation = selectedDateConversations.value.find((c: any) => c.id === conversationId)
+  
+  if (conversation) {
+    selectedConversation.value = conversation
+    showDropdown.value = false
+  }
+}
+
+const closeDropdown = () => {
+  showDropdown.value = false
 }
 
 const closeaiAnalyseTimelineConversationCard = () => {
+  selectedConversation.value = null
   selectedDateConversations.value = []
   selectedDate.value = ''
 }
 
 onMounted(() => {
   loadFromUrlParams()
-  eventBus.on('timeline:conversations', handleTimelineConversations) 
+  eventBus.on('timeline:show-dropdown', handleTimelineShowDropdown) 
 })
 
 onBeforeUnmount(() => {
-  eventBus.off('timeline:conversations', handleTimelineConversations)
+  eventBus.off('timeline:show-dropdown', handleTimelineShowDropdown)
 })
 
 // Navigation handlers
@@ -136,6 +158,17 @@ const navigateToTasks = () => {
 
 <template>
   <main class="dashboard">
+    <!-- Conversation Dropdown -->
+    <ConversationDropdown
+      v-if="showDropdown"
+      :conversations="selectedDateConversations"
+      :position="dropdownPosition"
+      :date="selectedDate"
+      :is-open="showDropdown"
+      @conversation-selected="handleConversationSelected"
+      @close="closeDropdown"
+    />
+
     <!-- Minimized apps tabs bar -->
     <div v-if="tabColumns.length > 0" class="tabs-bar">
       <span class="tabs-label">Minimized:</span>
@@ -199,8 +232,9 @@ const navigateToTasks = () => {
             <!-- AI Timeline Card -->
             <template v-else-if="column.id === 'aiTimelineCard'">
               <aiAnalyseTimelineConversationCard
+                v-if="selectedConversation"
                 :date="selectedDate"
-                :conversations="selectedDateConversations"
+                :conversations="[selectedConversation]"
                 :is-open="true"
                 :supabase-client="supabase"
                 :user-id="currentUserId"
