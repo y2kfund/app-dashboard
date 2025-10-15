@@ -1,4 +1,18 @@
 <template>
+  <div v-if="show" class="y2k-tooltip" :style="{ top: `${tooltipPosition.top}px`, left: `${tooltipPosition.left}px` }">
+    <div class="y2k-tooltip-loading" v-if="isTooltipLoading">
+      <p>Loading...</p>
+    </div>
+    <template v-for="item in conversationHistory" :key="item.id">
+      <a 
+        href="#" 
+        :title="item.question"
+        @click.prevent="handleRowClick(item)"
+        >
+        {{ formateAndShowTime(item.created_at) }} - {{ truncateQuestion(item.question) }}
+      </a>
+    </template>
+  </div>
   <header class="app-header">
     <div class="header-content">
       <!-- Logo and brand -->
@@ -18,7 +32,7 @@
       <div class="timeline-wrapper">
         <AnalyzeTimeline 
           :config="timelineConfig"
-          @event-selected="handleTimelineEventSelected"
+          @event-selected="toggleTooltip($event)"
           @navigate="handleTimelineNavigate"
         />
       </div>
@@ -34,7 +48,7 @@
           <span>Analyze</span>
         </button>
       </div>
-
+      
       <!-- Data Refresh Dropdown -->
       <div class="data-refresh" ref="refreshDropdownRef">
         <button @click="toggleRefresh" class="refresh-button" :disabled="isRefreshing">
@@ -292,7 +306,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { useSupabase } from '@y2kfund/core'
@@ -300,12 +314,112 @@ import { AnalyzeChat } from '@y2kfund/analyze-chat'
 import type { AnalyzeChatConfig, Conversation } from '@y2kfund/analyze-chat'
 import '@y2kfund/analyze-chat/dist/style.css'
 import { AnalyzeTimeline, ConversationModal } from '@y2kfund/analyze-timeline'
-import type { TimelineEvent } from '@y2kfund/analyze-timeline'
+import type { EventSelectedPayload } from '@y2kfund/analyze-timeline'
 import type { AnalyzeTimelineConfig } from '@y2kfund/analyze-timeline/dist/types'
 import '@y2kfund/analyze-timeline/dist/style.css'
 import { useCustomReports } from '../composables/useCustomReports'
 import { eventBus } from '../utils/eventBus'
 
+const show = ref(false)
+const tooltipPosition = reactive({ top: 0, left: 0 })
+const clickedTarget = ref<HTMLElement | null>(null);
+const tooltipRef = ref<HTMLElement | null>(null); 
+const isTooltipLoading = ref(false); 
+interface ConversationItem {
+  id: string;
+  user_id: string;
+  question: string;
+  response: string;
+  screenshot_url: string;
+  created_at: string; 
+}
+const conversationHistory = ref<ConversationItem[]>([]); 
+const closeTooltipOnClickOutside = (event: MouseEvent) => {
+  if (!show.value) return;
+  const target = event.target as HTMLElement;
+  if (clickedTarget.value && clickedTarget.value.contains(target)) {
+    return;
+  }
+  if (tooltipRef.value && tooltipRef.value.contains(target)) {
+    return;
+  }
+  show.value = false;
+  clickedTarget.value = null;
+};
+
+onMounted(() => {
+  document.addEventListener('click', closeTooltipOnClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeTooltipOnClickOutside);
+});
+
+const handleRowClick = (conversationRow: any) => {
+  const dateStr = conversationRow.created_at.substring(0, 10);
+  eventBus.emit('timeline:conversations', { 
+    date: dateStr, 
+    conversations: [conversationRow]
+  });
+  show.value = false;
+};
+
+async function toggleTooltip(payload: EventSelectedPayload) {
+  conversationHistory.value = []; 
+  clickedTarget.value = payload.target; 
+  const rect = payload.target.getBoundingClientRect();
+  tooltipPosition.top = rect.y + rect.height + 10;
+  tooltipPosition.left = rect.x;
+  show.value = true;
+  isTooltipLoading.value = true; 
+
+  const dateStr = payload.data.id
+  const startOfDay = `${dateStr}T00:00:00`
+  const endOfDay = `${dateStr}T23:59:59`
+
+  const { data, error } = await supabase
+    .schema('hf')
+    .from('ai_conversations_new')
+    .select('*')
+    .eq('user_id', user.value?.id)
+    .gte('created_at', startOfDay)
+    .lte('created_at', endOfDay)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    isTooltipLoading.value = false;
+    show.value = false;
+    throw error;
+  }
+  
+  isTooltipLoading.value = false;
+
+  if (data && data.length === 1) {
+    eventBus.emit('timeline:conversations', { 
+      date: dateStr, 
+      conversations: data 
+    });
+    show.value = false; 
+    
+  } else if (data && data.length > 1) {
+    conversationHistory.value = data;     
+  } else {
+    show.value = false;
+  }
+}
+function formateAndShowTime(dateString: string) {
+  return new Date(dateString).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+function truncateQuestion(question: string): string {
+  const MAX_LENGTH = 10;
+  if (!question || question.length <= MAX_LENGTH) {
+    return question;
+  }
+  return question.substring(0, MAX_LENGTH) + '...';
+}
 const router = useRouter()
 const route = useRoute()
 const { user, signOut } = useAuth()
@@ -1485,6 +1599,49 @@ onUnmounted(() => {
   background: #d97706;
 }
 
+.y2k-tooltip {
+    position:absolute;
+    z-index: 999;
+    left:0;
+    top:0;
+    background: #e8eef6;
+    border-radius: 4px;
+    border: 1px solid #dbe2ea;
+    padding:4px;
+    min-width: 160px;
+}
+.y2k-tooltip a {
+    position:relative;
+    padding:4px 8px;
+    color:#3b82f6;
+    font-size:13px;
+    text-decoration: none;
+    display: block; 
+}
+.y2k-tooltip::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    transform: translateX(-50%); 
+    border-width: 0 10px 10px 10px; 
+    border-style: solid;
+    border-color: transparent transparent #e8eef6 transparent;
+}
+.y2k-tooltip a:hover {
+  background: #3b82f6;
+  color: #ffffff;
+}
+.y2k-tooltip-loading p{
+  font-style: italic;
+  color: rgb(102, 102, 102);
+  margin:0px;
+  padding:0px;
+  font-size:14px;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+}
 /* Responsive design */
 @media (max-width: 1024px) {
   .header-content {
