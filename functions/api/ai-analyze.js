@@ -7,10 +7,11 @@
 export async function onRequestPost(context) {
   // Handle CORS
   const corsHeaders = {
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Content-Type': 'application/json',
+    'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
+    'Access-Control-Allow-Headers': 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
+    'Content-Type': 'application/json'
   };
 
   // Handle OPTIONS request (preflight)
@@ -35,7 +36,7 @@ export async function onRequestPost(context) {
     }
 
     // Parse the incoming request
-    const { question, screenshot, timestamp, url: pageUrl } = await context.request.json();
+    const { question, screenshot, timestamp, url: pageUrl, context: conversationContext } = await context.request.json();
 
     // Validate required fields
     if (!question?.trim()) {
@@ -48,10 +49,7 @@ export async function onRequestPost(context) {
     }
 
     // Prepare the message for the AI model with enhanced financial analysis prompt
-    const messages = [
-      {
-        role: 'system',
-        content: `You are an expert financial advisor and options trading specialist analyzing the Y2K Fund dashboard. 
+    let systemPrompt = `You are an expert financial advisor and options trading specialist analyzing the Y2K Fund dashboard. 
 
 Your analysis should be:
 1. **Comprehensive & Data-Driven**: Extract all visible financial metrics, positions, P&L, strikes, expiration dates, and Greeks
@@ -77,6 +75,21 @@ Format your response with:
 - Bottom-line recommendations
 
 Be direct, professional, and specific. Users need actionable intelligence, not generic advice.`
+
+    // Add context if this is a follow-up question
+    if (conversationContext?.previousQuestion && conversationContext?.previousResponse) {
+      systemPrompt += `\n\n**PREVIOUS CONVERSATION CONTEXT:**
+The user previously asked: "${conversationContext.previousQuestion}"
+
+You responded with: "${conversationContext.previousResponse.substring(0, 500)}${conversationContext.previousResponse.length > 500 ? '...' : ''}"
+
+The user is now asking a follow-up question about the same screenshot and situation. Reference the previous conversation and build upon it naturally.`
+    }
+
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt
       },
       {
         role: 'user',
