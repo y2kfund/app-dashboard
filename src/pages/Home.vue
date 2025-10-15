@@ -11,14 +11,16 @@ import '@y2kfund/summary/dist/style.css'
 import '@y2kfund/thesis/dist/style.css'
 import '@y2kfund/tasks/dist/style.css'
 import { useAuth } from '../composables/useAuth'
+import { useSupabase } from '@y2kfund/core'
 import { eventBus } from '../utils/eventBus'
 
-// Get current user
+// Get current user and supabase client
 const { user } = useAuth()
+const supabase = useSupabase()
 const router = useRouter()
 
 // Computed property for current user ID
-const currentUserId = computed(() => user.value?.id || null)
+const currentUserId = computed(() => user.value?.id || undefined)
 
 // Provide the event bus to child components
 provide('eventBus', eventBus);
@@ -200,6 +202,8 @@ const navigateToTasks = () => {
                 :date="selectedDate"
                 :conversations="selectedDateConversations"
                 :is-open="true"
+                :supabase-client="supabase"
+                :user-id="currentUserId"
                 @close="closeaiAnalyseTimelineConversationCard"
               />
             </template>

@@ -630,7 +630,7 @@ const handleTimelineEventSelected = async (event: TimelineEvent) => {
       .eq('user_id', user.value?.id)
       .gte('created_at', startOfDay)
       .lte('created_at', endOfDay)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) throw error
     selectedDateConversations.value = data || []
