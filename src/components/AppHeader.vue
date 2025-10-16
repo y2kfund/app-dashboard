@@ -382,6 +382,7 @@ async function toggleTooltip(payload: EventSelectedPayload) {
     .from('ai_conversations_new')
     .select('*')
     .eq('user_id', user.value?.id)
+    .is('parent_id', null)
     .gte('created_at', startOfDay)
     .lte('created_at', endOfDay)
     .order('created_at', { ascending: false })
@@ -391,13 +392,30 @@ async function toggleTooltip(payload: EventSelectedPayload) {
     show.value = false;
     throw error;
   }
-  
+
   isTooltipLoading.value = false;
 
   if (data && data.length === 1) {
+    const { data: data_children, error: error_children } = await supabase
+    .schema('hf')
+    .from('ai_conversations_new')
+    .select('*')
+    .eq('user_id', user.value?.id)
+    .eq('parent_id', data[0]?.id)
+    .gte('created_at', startOfDay)
+    .lte('created_at', endOfDay)
+    .order('created_at', { ascending: false })
+      
+    if (error_children) {
+      isTooltipLoading.value = false;
+      show.value = false;
+      throw error_children;
+    }
+    const combinedData = [...data, ...data_children];
+    console.log("COMB",data_children)
     eventBus.emit('timeline:conversations', { 
       date: dateStr, 
-      conversations: data 
+      conversations: combinedData 
     });
     show.value = false; 
     
