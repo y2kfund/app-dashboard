@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, provide, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, provide, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
@@ -13,6 +13,8 @@ import '@y2kfund/tasks/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { useSupabase } from '@y2kfund/core'
 import { eventBus } from '../utils/eventBus'
+import 'gridstack/dist/gridstack.min.css'
+import { GridStack } from 'gridstack'
 
 // Get current user and supabase client
 const { user } = useAuth()
@@ -48,7 +50,7 @@ const componentModes = ref<Record<string, ComponentMode>>({
   positions: 'window',
   thesis: 'window',
   tasks: 'window',
-  aiTimelineCard: 'window'
+  aiTimelineCard: 'tab' // minimized by default
 })
 
 // Computed properties
@@ -86,15 +88,45 @@ const loadFromUrlParams = () => {
       componentModes.value[id] = 'tab'
     })
   }
+  // Restore visible components at correct positions
+  nextTick(() => {
+    if (gridInstance.value) {
+      let colIdx = 0
+      windowColumns.value.forEach((col) => {
+        const el = gridstackRef.value?.querySelector(`[data-gs-id="${col.id}"]`)
+        if (el && !gridInstance.value.engine.nodes.find(n => n.el === el)) {
+          gridInstance.value.addWidget(el, {x: colIdx, y: 0, width: 1, height: 5})
+          colIdx++
+        }
+      })
+    }
+  })
 }
 
 // Component mode management
 const handleMinimize = (columnId: string) => {
   componentModes.value[columnId] = 'tab'
+  nextTick(() => {
+    if (gridInstance.value) {
+      const node = gridInstance.value.engine.nodes.find(n => n.el.getAttribute('data-gs-id') === columnId)
+      if (node) {
+        gridInstance.value.removeWidget(node.el)
+      }
+    }
+  })
 }
 
 const handleRestore = (columnId: string) => {
   componentModes.value[columnId] = 'window'
+  nextTick(() => {
+    if (gridInstance.value) {
+      const el = gridstackRef.value?.querySelector(`[data-gs-id="${columnId}"]`)
+      if (el) {
+        const pos = getNextAvailablePosition(gridInstance.value)
+        gridInstance.value.addWidget(el, {x: pos.x, y: pos.y, width: 1, height: 5})
+      }
+    }
+  })
 }
 
 // Watch for changes and update URL
@@ -137,14 +169,51 @@ const closeaiAnalyseTimelineConversationCard = () => {
   selectedDate.value = ''
 }
 
+const gridstackRef = ref<HTMLDivElement | null>(null)
+const gridInstance = ref<GridStack | null>(null)
+
+const getGridColumns = () => {
+  if (window.innerWidth < 640) return 1
+  if (window.innerWidth < 900) return 2
+  if (window.innerWidth < 1200) return 3
+  return 4
+}
+
 onMounted(() => {
   loadFromUrlParams()
-  eventBus.on('timeline:show-dropdown', handleTimelineShowDropdown) 
+  eventBus.on('timeline:show-dropdown', handleTimelineShowDropdown)
+  nextTick(() => {
+    if (gridstackRef.value) {
+      gridInstance.value = GridStack.init({ 
+        column: getGridColumns(),
+        float: true,
+        margin: 10,
+        cellHeight: 400,
+        resizable: {
+          handles: 'e, se, s, sw, w',
+          minHeight: 60
+        }
+      }, gridstackRef.value);
+
+      // Set initial height for each item to 5 rows (500px)
+      gridInstance.value.engine.nodes.forEach(node => {
+        gridInstance.value?.update(node.el, {height: 5});
+      });
+    }
+  })
+  window.addEventListener('resize', handleResize)
 })
 
 onBeforeUnmount(() => {
   eventBus.off('timeline:show-dropdown', handleTimelineShowDropdown)
+  window.removeEventListener('resize', handleResize)
 })
+
+const handleResize = () => {
+  if (gridInstance.value) {
+    gridInstance.value.column(getGridColumns())
+  }
+}
 
 // Navigation handlers
 const navigateToThesis = () => {
@@ -153,6 +222,18 @@ const navigateToThesis = () => {
 
 const navigateToTasks = () => {
   router.push('/tasks')
+}
+
+function getNextAvailablePosition(grid: GridStack) {
+  const usedColumns = new Set<number>();
+  grid.engine.nodes.forEach(node => {
+    usedColumns.add(node.x);
+  });
+  let x = 0;
+  while (usedColumns.has(x)) {
+    x++;
+  }
+  return { x, y: 0 }; // Place in next free column, row 0
 }
 </script>
 
@@ -184,71 +265,76 @@ const navigateToTasks = () => {
     </div>
 
     <div class="dashboard-grid">
-      <template v-for="column in windowColumns" :key="column?.id"> 
-        <div 
-          v-if="column && (column.id !== 'aiTimelineCard' || selectedDateConversations.length > 0)"
-          class="dashboard-column"
-        >
-          <section class="card">
-            <!-- Summary content -->
-            <template v-if="column.id === 'summary'">
-              <Summary 
-                :show-header-link="true" 
-                :user-id="currentUserId"
-                @minimize="handleMinimize('summary')" 
-              />
-            </template>
-            
-            <!-- Positions component -->
-            <template v-else-if="column.id === 'positions'">
-              <Positions 
-                accountId="demo" 
-                :show-header-link="true" 
-                :user-id="currentUserId"
-                @minimize="handleMinimize('positions')" 
-              />
-            </template>
+      <div ref="gridstackRef" class="grid-stack">
+        <template v-for="(column, idx) in windowColumns" :key="column?.id">
+          <div 
+            class="grid-stack-item ui-resizable"
+            :data-gs-id="column.id"
+            gs-width="1"
+          >
+            <div class="grid-stack-item-content dashboard-column">
+              <section class="card">
+                <!-- Summary content -->
+                <template v-if="column.id === 'summary'">
+                  <Summary 
+                    :show-header-link="true" 
+                    :user-id="currentUserId"
+                    @minimize="handleMinimize('summary')" 
+                  />
+                </template>
+                
+                <!-- Positions component -->
+                <template v-else-if="column.id === 'positions'">
+                  <Positions 
+                    accountId="demo" 
+                    :show-header-link="true" 
+                    :user-id="currentUserId"
+                    @minimize="handleMinimize('positions')" 
+                  />
+                </template>
 
-            <!-- Thesis component with navigation -->
-            <template v-else-if="column.id === 'thesis'">
-              <Thesis 
-                :show-header-link="true"
-                :user-id="currentUserId"
-                @minimize="handleMinimize('thesis')"
-                @navigate="navigateToThesis"
-              />
-            </template>
+                <!-- Thesis component with navigation -->
+                <template v-else-if="column.id === 'thesis'">
+                  <Thesis 
+                    :show-header-link="true"
+                    :user-id="currentUserId"
+                    @minimize="handleMinimize('thesis')"
+                    @navigate="navigateToThesis"
+                  />
+                </template>
 
-            <!-- Tasks component with navigation -->
-            <template v-else-if="column.id === 'tasks'">
-              <Tasks 
-                :show-header-link="true"
-                :user-id="currentUserId"
-                @minimize="handleMinimize('tasks')"
-                @navigate="navigateToTasks"
-              />
-            </template>
+                <!-- Tasks component with navigation -->
+                <template v-else-if="column.id === 'tasks'">
+                  <Tasks 
+                    :show-header-link="true"
+                    :user-id="currentUserId"
+                    @minimize="handleMinimize('tasks')"
+                    @navigate="navigateToTasks"
+                  />
+                </template>
 
-            <!-- AI Timeline Card -->
-            <template v-else-if="column.id === 'aiTimelineCard'">
-              <aiAnalyseTimelineConversationCard
-                v-if="selectedConversation"
-                :date="selectedDate"
-                :conversations="[selectedConversation]"
-                :is-open="true"
-                :supabase-client="supabase"
-                :user-id="currentUserId"
-                @close="closeaiAnalyseTimelineConversationCard"
-              />
-            </template>
+                <!-- AI Timeline Card -->
+                <template v-else-if="column.id === 'aiTimelineCard'">
+                  <aiAnalyseTimelineConversationCard
+                    v-if="selectedConversation"
+                    :date="selectedDate"
+                    :conversations="[selectedConversation]"
+                    :is-open="true"
+                    :supabase-client="supabase"
+                    :user-id="currentUserId"
+                    @close="closeaiAnalyseTimelineConversationCard"
+                  />
+                </template>
 
-            <!-- Other column content -->
-            <template v-else>
-              <p>{{ column.content }}</p>
-            </template>
-          </section>
-        </div>
-      </template>
+                <!-- Other column content -->
+                <template v-else>
+                  <p>{{ column.content }}</p>
+                </template>
+              </section>
+            </div>
+          </div>
+        </template>
+      </div>
     </div>
   </main>
 </template>
@@ -299,10 +385,6 @@ const navigateToTasks = () => {
 }
 
 .dashboard-grid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  /* gap: 1.5rem; */
   margin: 0 auto;
 }
 
@@ -315,12 +397,9 @@ const navigateToTasks = () => {
 }
 
 .card {
-  padding: 0.8rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(0,0,0,.1);
-  box-shadow: 0 2px 8px rgba(0,0,0,.05);
-  background: white;
-  height: fit-content;
+  min-height: 0 !important;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-container {
@@ -334,6 +413,24 @@ p {
   line-height: 1.5;
 }
 
+.grid-stack {
+  margin: 0 auto;
+  height: auto;
+  min-height: unset;
+}
+.grid-stack-item {
+  min-height: 400px !important;
+}
+.grid-stack-item-content {
+  min-height: 0 !important;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
 /* Responsive behavior for smaller screens */
 @media (max-width: 768px) {
   .dashboard-grid {
@@ -344,5 +441,10 @@ p {
   .tabs-bar {
     flex-wrap: wrap;
   }
+}
+
+.dashboard-grid, .grid-stack {
+  width: 100%;
+  overflow: visible;
 }
 </style>
