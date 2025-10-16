@@ -191,11 +191,43 @@ Be direct, actionable, and data-driven. Always consider the user's risk toleranc
       })
     }
 
-    // Return successful response
+    // Build the payload that was sent to OpenRouter (for transparency)
+    const sentToAI = {
+      model: 'anthropic/claude-sonnet-4.5',
+      messages: messages,
+      parameters: {
+        max_tokens: 4096,
+        temperature: 1.0,
+        top_p: 1.0,
+        top_k: 0
+      }
+    }
+
+    // Build the raw response received from OpenRouter
+    const receivedFromAI = {
+      raw_response: data,
+      extracted_content: aiResponse,
+      usage: {
+        prompt_tokens: data.usage?.prompt_tokens || 0,
+        completion_tokens: data.usage?.completion_tokens || 0,
+        total_tokens: data.usage?.total_tokens || 0
+      },
+      model_used: data.model || 'anthropic/claude-sonnet-4.5',
+      finish_reason: data.choices?.[0]?.finish_reason || 'unknown'
+    }
+
+    // Return successful response with full transparency
     return new Response(JSON.stringify({ 
+      // Main response (what frontend currently uses)
       response: aiResponse,
       timestamp: new Date().toISOString(),
-      model: 'anthropic/claude-sonnet-4.5'
+      model: 'anthropic/claude-sonnet-4.5',
+      
+      // Transparency data (for debugging and user visibility)
+      api_payload: {
+        request_sent_to_openrouter: sentToAI,
+        response_received_from_openrouter: receivedFromAI
+      }
     }), {
       status: 200,
       headers: corsHeaders
