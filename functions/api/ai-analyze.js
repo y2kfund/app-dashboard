@@ -205,15 +205,7 @@ Be direct, actionable, and data-driven. Always consider the user's risk toleranc
 
     // Build the raw response received from OpenRouter
     const receivedFromAI = {
-      raw_response: data,
-      extracted_content: aiResponse,
-      usage: {
-        prompt_tokens: data.usage?.prompt_tokens || 0,
-        completion_tokens: data.usage?.completion_tokens || 0,
-        total_tokens: data.usage?.total_tokens || 0
-      },
-      model_used: data.model || 'anthropic/claude-sonnet-4.5',
-      finish_reason: data.choices?.[0]?.finish_reason || 'unknown'
+      raw_response: data
     }
 
     // Return successful response with full transparency
