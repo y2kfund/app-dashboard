@@ -355,12 +355,35 @@ onUnmounted(() => {
   document.removeEventListener('click', closeTooltipOnClickOutside);
 });
 
-const handleRowClick = (conversationRow: any) => {
+const handleRowClick = async(conversationRow: any) => {
   const dateStr = conversationRow.created_at.substring(0, 10);
-  eventBus.emit('timeline:conversations', { 
-    date: dateStr, 
-    conversations: [conversationRow]
-  });
+  
+  //--
+  const startOfDay = `${dateStr}T00:00:00`
+  const endOfDay = `${dateStr}T23:59:59`
+  const { data: data_children, error: error_children } = await supabase
+    .schema('hf')
+    .from('ai_conversations_new')
+    .select('*')
+    .eq('user_id', user.value?.id)
+    .eq('parent_id', conversationRow?.id)
+    .gte('created_at', startOfDay)
+    .lte('created_at', endOfDay)
+    .order('created_at', { ascending: false })
+      
+    if (error_children) {
+      isTooltipLoading.value = false;
+      show.value = false;
+      throw error_children;
+    }
+    const combinedData = [conversationRow, ...data_children];
+    console.log("COMB",data_children)
+    eventBus.emit('timeline:conversations', { 
+      date: dateStr, 
+      conversations: combinedData 
+    });
+  //--
+
   show.value = false;
 };
 
