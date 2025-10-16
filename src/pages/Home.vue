@@ -12,6 +12,7 @@ import '@y2kfund/thesis/dist/style.css'
 import '@y2kfund/tasks/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { eventBus } from '../utils/eventBus'
+import { AnalyzeChat } from '@y2kfund/analyze-chat'
 
 // Get current user
 const { user } = useAuth()
@@ -130,9 +131,27 @@ const navigateToThesis = () => {
 const navigateToTasks = () => {
   router.push('/tasks')
 }
+
+const handleSubmitAQuestion = (payload: { question: string; screenshotUrl?: string | null }) => {
+  // console.log('[Home] Caught submitAQuestion emit:', payload)
+  const conversationId = selectedDateConversations.value.length > 0 
+    ? selectedDateConversations.value[0].id 
+    : undefined;
+
+  const newPayload = {
+      ...payload,
+      id: conversationId
+  };
+  eventBus.emit('ai:submitQuestion', newPayload)
+}
 </script>
 
 <template>
+  <div>
+    <div style="display: none;">
+      <AnalyzeChat />
+    </div>
+  </div>
   <main class="dashboard">
     <!-- Minimized apps tabs bar -->
     <div v-if="tabColumns.length > 0" class="tabs-bar">
@@ -201,6 +220,7 @@ const navigateToTasks = () => {
                 :conversations="selectedDateConversations"
                 :is-open="true"
                 @close="closeaiAnalyseTimelineConversationCard"
+                @submitNewQuestion="handleSubmitAQuestion"
               />
             </template>
 
