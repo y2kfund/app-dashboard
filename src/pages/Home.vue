@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, provide, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, provide, onBeforeUnmount, Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
@@ -12,7 +12,7 @@ import '@y2kfund/thesis/dist/style.css'
 import '@y2kfund/tasks/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { eventBus } from '../utils/eventBus'
-import { AnalyzeChat, AnalyzeChatConfig } from '@y2kfund/analyze-chat'
+import { AnalyzeChat, AnalyzeChatConfig, Conversation } from '@y2kfund/analyze-chat'
 import { useSupabase } from '@y2kfund/core'
 
 // Get current user
@@ -152,6 +152,17 @@ const handleSubmitAQuestion = (payload: { question: string; screenshotUrl?: stri
   };
   eventBus.emit('ai:submitQuestion', newPayload)
 }
+const sendAIresponseToTimelineCardForUpdate: Ref<Conversation | null> = ref(null);
+const conversationAddedInTimelineCard = (conversation: Conversation | null) => {
+  //  console.log('[AppHeader] New conversation added at timeline card:', conversation)
+  sendAIresponseToTimelineCardForUpdate.value = conversation;
+  if (conversation) {
+    selectedDateConversations.value.push(conversation);
+    // console.log('[Parent] Successfully added new conversation to array:', conversation.id);
+  } else {
+    // console.warn('[Parent] Received null conversation, likely an error in the chat modal.');
+  }
+}
 </script>
 
 <template>
@@ -159,6 +170,7 @@ const handleSubmitAQuestion = (payload: { question: string; screenshotUrl?: stri
     <div style="display: none;">
       <AnalyzeChat
       :config="analyzeChatConfig"
+       @conversation-added-in-timeline-card="conversationAddedInTimelineCard"
        />
     </div>
   </div>
@@ -229,6 +241,7 @@ const handleSubmitAQuestion = (payload: { question: string; screenshotUrl?: stri
                 :date="selectedDate"
                 :conversations="selectedDateConversations"
                 :is-open="true"
+                :updateChatInTimelineCard="sendAIresponseToTimelineCardForUpdate"
                 @close="closeaiAnalyseTimelineConversationCard"
                 @submitNewQuestion="handleSubmitAQuestion"
               />
