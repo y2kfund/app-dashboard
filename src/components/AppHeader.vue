@@ -613,9 +613,18 @@ const handleAnalyzeChatError = (error: Error) => {
 const handleTimelineEventSelected = async (event: TimelineEvent, position: { x: number; y: number }) => {
   console.log('[AppHeader] Timeline event selected:', event, position)
   
-  isLoadingConversations.value = true
   selectedDate.value = event.id
   selectedDateConversations.value = []
+  
+  // Emit to event bus IMMEDIATELY to show dropdown with loading state
+  eventBus.emit('timeline:show-dropdown', {
+    date: selectedDate.value,
+    conversations: [],
+    position: position,
+    loading: true
+  })
+  
+  isLoadingConversations.value = true
 
   try {
     const dateStr = event.id
@@ -634,15 +643,25 @@ const handleTimelineEventSelected = async (event: TimelineEvent, position: { x: 
     if (error) throw error
     selectedDateConversations.value = data || []
     
-    // Emit to event bus to show dropdown with conversations
+    // Update the dropdown with loaded conversations
     eventBus.emit('timeline:show-dropdown', {
       date: selectedDate.value,
       conversations: selectedDateConversations.value,
-      position: position
+      position: position,
+      loading: false
     })
   } catch (error) {
     console.error('[AppHeader] Error fetching conversations:', error)
     selectedDateConversations.value = []
+    
+    // Update dropdown with error state
+    eventBus.emit('timeline:show-dropdown', {
+      date: selectedDate.value,
+      conversations: [],
+      position: position,
+      loading: false,
+      error: 'Failed to load conversations'
+    })
   } finally {
     isLoadingConversations.value = false
   }

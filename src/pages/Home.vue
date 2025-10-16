@@ -138,13 +138,21 @@ const selectedDateConversations = ref<any[]>([])
 const showDropdown = ref(false)
 const dropdownPosition = ref({ x: 0, y: 0 })
 const selectedConversation = ref<any>(null)
+const dropdownLoading = ref(false)
 
-const handleTimelineShowDropdown = (payload: { date: string, conversations: any[], position: { x: number, y: number } }) => {
-  console.log('[Home] Showing dropdown with conversations:', payload)
+const handleTimelineShowDropdown = (payload: { date: string, conversations: any[], position: { x: number, y: number }, loading?: boolean, error?: string }) => {
+  console.log('[Home] Showing dropdown:', payload)
+  
   selectedDate.value = payload.date
   selectedDateConversations.value = payload.conversations
   dropdownPosition.value = payload.position
+  dropdownLoading.value = payload.loading || false
   showDropdown.value = true
+  
+  // If there's an error, you could handle it here
+  if (payload.error) {
+    console.error('[Home] Dropdown error:', payload.error)
+  }
 }
 
 const handleConversationSelected = async (conversationId: string) => {
@@ -246,6 +254,7 @@ function getNextAvailablePosition(grid: GridStack) {
       :position="dropdownPosition"
       :date="selectedDate"
       :is-open="showDropdown"
+      :loading="dropdownLoading"
       @conversation-selected="handleConversationSelected"
       @close="closeDropdown"
     />
