@@ -184,7 +184,7 @@ const getGridColumns = () => {
   if (window.innerWidth < 640) return 1
   if (window.innerWidth < 900) return 2
   if (window.innerWidth < 1200) return 3
-  return 4
+  return 8
 }
 
 onMounted(() => {
@@ -203,10 +203,33 @@ onMounted(() => {
         }
       }, gridstackRef.value);
 
-      // Set initial height for each item to 5 rows (500px)
-      gridInstance.value.engine.nodes.forEach(node => {
-        gridInstance.value?.update(node.el, {height: 5});
-      });
+      // Restore layout from localStorage
+      const savedLayout = localStorage.getItem('dashboardGridLayout')
+      if (savedLayout) {
+        nextTick(() => {
+          const layout = JSON.parse(savedLayout)
+          layout.forEach((item: any) => {
+            if (componentModes.value[item.id] === 'window') {
+              const el = gridstackRef.value?.querySelector(`[data-gs-id="${item.id}"]`)
+              if (el) {
+                gridInstance.value?.update(el, {
+                  x: item.x,
+                  y: item.y,
+                  w: item.w ?? 1, // Use w
+                  h: item.h ?? 5, // Use h
+                  id: item.id
+                })
+              }
+            }
+          })
+        })
+      } else {
+        gridInstance.value.engine.nodes.forEach(node => {
+          gridInstance.value?.update(node.el, {height: 5});
+        });
+      }
+
+      gridInstance.value.on('change', saveGridLayout)
     }
   })
   window.addEventListener('resize', handleResize)
@@ -242,6 +265,18 @@ function getNextAvailablePosition(grid: GridStack) {
     x++;
   }
   return { x, y: 0 }; // Place in next free column, row 0
+}
+
+function saveGridLayout(e) {
+  if (!gridInstance.value) return
+  const layout = gridInstance.value.engine.nodes.map(node => ({
+    id: node.el.getAttribute('data-gs-id'),
+    x: node.x,
+    y: node.y,
+    w: node.w,   // <-- Use w
+    h: node.h    // <-- Use h
+  }))
+  localStorage.setItem('dashboardGridLayout', JSON.stringify(layout))
 }
 </script>
 
