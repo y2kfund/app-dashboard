@@ -35,8 +35,8 @@ export async function onRequest(context) {
   try {
     const { taskId, userId, question } = await context.request.json()
     const supabase = createClient(
-      context.env.SUPABASE_URL,
-      context.env.SUPABASE_SERVICE_ROLE_KEY
+      context.env.VITE_SUPA_URL,
+      context.env.VITE_SUPA_ANON
     )
 
     // Fetch task description
