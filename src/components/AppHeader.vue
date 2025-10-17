@@ -139,13 +139,30 @@
 
       <!-- Custom Reports Dropdown -->
       <div class="custom-reports" ref="reportsDropdownRef">
-        <button @click="toggleReports" class="reports-button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14,2 14,8 20,8"/>
-          </svg>
-          Custom Reports
-        </button>
+        <div class="reports-container">
+          <button @click="toggleReports" class="reports-button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+            Custom Reports
+          </button>
+          
+          <!-- Active Report Name Display -->
+          <div v-if="activeReportName" class="active-report-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+            <span class="active-report-name">{{ activeReportName }}</span>
+            <!--a @click="clearActiveReport" class="clear-report-btn" title="Clear report">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </a-->
+          </div>
+        </div>
 
         <!-- Dropdown Menu -->
         <div v-if="showReports" class="reports-dropdown">
@@ -200,15 +217,20 @@
                   <span 
                     v-else 
                     class="report-name" 
-                    @dblclick="startEditReportName(report)"
-                    title="Double-click to edit"
+                    @click="loadReport(report)"
+                    title="Click to load report"
                   >
                     {{ report.name }}
                   </span>
                   <small class="report-date">{{ formatDate(report.created_at) }}</small>
                 </div>
                 <div class="report-actions">
-                  <button @click="loadReport(report)" class="load-btn">Load</button>
+                  <button @click="startEditReportName(report)" class="rename-btn" title="Rename report">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
                   <button @click="handleUpdateReport(report.id)" class="update-btn" title="Update with current URL">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M23 4v6h-6"/>
@@ -427,6 +449,9 @@ const loadReport = (report: any) => {
       query[key] = value
     }
     
+    // Add report name to query parameters
+    query['reportName'] = report.name
+    
     // Create the new URL
     const newUrl = router.resolve({ 
       path: route.path,
@@ -436,11 +461,22 @@ const loadReport = (report: any) => {
     // Navigate to the new URL and reload the page
     window.location.href = newUrl
   } else {
-    // If no parameters, just navigate to the clean path and reload
-    window.location.href = route.path
+    // If no parameters, just navigate with report name and reload
+    const newUrl = router.resolve({ 
+      path: route.path,
+      query: { reportName: report.name }
+    }).href
+    window.location.href = newUrl
   }
   
   showReports.value = false
+}
+
+const clearActiveReport = () => {
+  // Remove reportName from URL and reload
+  const url = new URL(window.location.href)
+  url.searchParams.delete('reportName')
+  window.location.href = url.toString()
 }
 
 const copyReportUrl = async (report: any) => {
@@ -731,6 +767,12 @@ const saveReportName = async (reportId: string) => {
     alert('Failed to update report name')
   }
 }
+
+// Add computed property for active report name from URL
+const activeReportName = computed(() => {
+  const urlParams = new URLSearchParams(window.location.search)
+  return urlParams.get('reportName') || ''
+})
 </script>
 
 <style scoped>
@@ -1484,11 +1526,13 @@ const saveReportName = async (reportId: string) => {
   cursor: pointer;
   padding: 0.125rem;
   border-radius: 3px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .report-name:hover {
   background: #f1f5f9;
+  color: #3b82f6;
+  text-decoration: underline;
 }
 
 .edit-name-form {
@@ -1518,13 +1562,26 @@ const saveReportName = async (reportId: string) => {
   flex-shrink: 0;
 }
 
-.load-btn, .copy-btn, .delete-btn {
+.load-btn, .rename-btn, .copy-btn, .delete-btn {
   padding: 0.25rem 0.5rem;
   border: none;
   border-radius: 4px;
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.rename-btn {
+  background: #8b5cf6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+}
+
+.rename-btn:hover {
+  background: #7c3aed;
 }
 
 .load-btn {
@@ -1626,5 +1683,15 @@ const saveReportName = async (reportId: string) => {
     width: 260px;
     right: -1rem;
   }
+}
+.active-report-badge {
+    text-align: center;
+    margin-top: 2px;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+span.active-report-name {
+    padding-left: 2px;
 }
 </style>
