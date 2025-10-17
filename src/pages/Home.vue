@@ -77,6 +77,30 @@ const updateUrlParams = () => {
   window.history.replaceState({}, '', url.toString())
 }
 
+function getLayoutFromUrl(): any[] {
+  const urlParams = new URLSearchParams(window.location.search)
+  const layoutParam = urlParams.get('dashboardLayout')
+  if (layoutParam) {
+    try {
+      return JSON.parse(decodeURIComponent(layoutParam))
+    } catch (e) {
+      console.error('Failed to parse dashboardLayout param', e)
+    }
+  }
+  return []
+}
+
+function setLayoutToUrl(layout: any[]) {
+  const url = new URL(window.location.href)
+  if (layout.length > 0) {
+    url.searchParams.set('dashboardLayout', encodeURIComponent(JSON.stringify(layout)))
+  } else {
+    url.searchParams.delete('dashboardLayout')
+  }
+  window.history.replaceState({}, '', url.toString())
+}
+
+// --- Replace loadFromUrlParams to also restore layout from URL ---
 const loadFromUrlParams = () => {
   const urlParams = new URLSearchParams(window.location.search)
   const minimizedAppsParam = urlParams.get('minimizedApps')
@@ -99,6 +123,30 @@ const loadFromUrlParams = () => {
           colIdx++
         }
       })
+      // Restore layout from URL param
+      const layout = getLayoutFromUrl()
+      if (layout && layout.length > 0) {
+        nextTick(() => {
+          layout.forEach((item: any) => {
+            if (componentModes.value[item.id] === 'window') {
+              const el = gridstackRef.value?.querySelector(`[data-gs-id="${item.id}"]`)
+              if (el) {
+                gridInstance.value?.update(el, {
+                  x: item.x,
+                  y: item.y,
+                  w: item.w ?? 1,
+                  h: item.h ?? 5,
+                  id: item.id
+                })
+              }
+            }
+          })
+        })
+      } else {
+        gridInstance.value.engine.nodes.forEach(node => {
+          gridInstance.value?.update(node.el, {height: 5});
+        });
+      }
     }
   })
 }
@@ -203,11 +251,10 @@ onMounted(() => {
         }
       }, gridstackRef.value);
 
-      // Restore layout from localStorage
-      const savedLayout = localStorage.getItem('dashboardGridLayout')
-      if (savedLayout) {
+      // Restore layout from URL param
+      const layout = getLayoutFromUrl()
+      if (layout && layout.length > 0) {
         nextTick(() => {
-          const layout = JSON.parse(savedLayout)
           layout.forEach((item: any) => {
             if (componentModes.value[item.id] === 'window') {
               const el = gridstackRef.value?.querySelector(`[data-gs-id="${item.id}"]`)
@@ -215,8 +262,8 @@ onMounted(() => {
                 gridInstance.value?.update(el, {
                   x: item.x,
                   y: item.y,
-                  w: item.w ?? 1, // Use w
-                  h: item.h ?? 5, // Use h
+                  w: item.w ?? 1,
+                  h: item.h ?? 5,
                   id: item.id
                 })
               }
@@ -273,10 +320,10 @@ function saveGridLayout(e) {
     id: node.el.getAttribute('data-gs-id'),
     x: node.x,
     y: node.y,
-    w: node.w,   // <-- Use w
-    h: node.h    // <-- Use h
+    w: node.w,
+    h: node.h
   }))
-  localStorage.setItem('dashboardGridLayout', JSON.stringify(layout))
+  setLayoutToUrl(layout)
 }
 </script>
 
