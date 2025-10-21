@@ -244,7 +244,7 @@ onMounted(() => {
         column: getGridColumns(),
         float: true,
         margin: 10,
-        cellHeight: 400,
+        cellHeight: 100,
         resizable: {
           handles: 'e, se, s, sw, w',
           minHeight: 60
@@ -510,7 +510,7 @@ p {
   min-height: unset;
 }
 .grid-stack-item {
-  min-height: 400px !important;
+  min-height: 100px !important;
 }
 .grid-stack-item-content {
   min-height: 0 !important;
