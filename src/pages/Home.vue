@@ -5,11 +5,13 @@ import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
 import { Thesis } from '@y2kfund/thesis'
 import { Tasks } from '@y2kfund/tasks'
+import { Trades } from '@y2kfund/trades'
 import { aiAnalyseTimelineConversationCard, ConversationDropdown } from '@y2kfund/analyze-timeline'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
 import '@y2kfund/thesis/dist/style.css'
 import '@y2kfund/tasks/dist/style.css'
+import '@y2kfund/trades/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { useSupabase } from '@y2kfund/core'
 import { eventBus } from '../utils/eventBus'
@@ -41,6 +43,7 @@ const columns = ref<Column[]>([
   { id: 'positions', title: 'Positions', content: '', component: Positions },
   { id: 'thesis', title: 'Thesis', content: '', component: Thesis },
   { id: 'tasks', title: 'Tasks', content: '', component: Tasks },
+  { id: 'trades', title: 'Trades', content: '', component: Trades },
   { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard }
 ])
 
@@ -50,6 +53,7 @@ const componentModes = ref<Record<string, ComponentMode>>({
   positions: 'window',
   thesis: 'window',
   tasks: 'window',
+  trades: 'window',
   aiTimelineCard: 'tab' // minimized by default
 })
 
@@ -302,6 +306,10 @@ const navigateToTasks = () => {
   router.push('/tasks')
 }
 
+const navigateToTrades = () => {
+  router.push('/trades')
+}
+
 function getNextAvailablePosition(grid: GridStack) {
   const usedColumns = new Set<number>();
   grid.engine.nodes.forEach(node => {
@@ -401,6 +409,16 @@ function saveGridLayout(e) {
                     :user-id="currentUserId"
                     @minimize="handleMinimize('tasks')"
                     @navigate="navigateToTasks"
+                  />
+                </template>
+
+                <!-- Trades component with navigation -->
+                <template v-else-if="column.id === 'trades'">
+                  <Trades 
+                    :show-header-link="true"
+                    :user-id="currentUserId"
+                    @minimize="handleMinimize('trades')"
+                    @navigate="navigateToTrades"
                   />
                 </template>
 
