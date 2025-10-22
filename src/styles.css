@@ -50,3 +50,14 @@ button.graph-btn {
   width: auto;
   padding: 0.4rem 0.75rem !important;
 }
+button.col-rename-btn {
+    padding: 0;
+    width: auto;
+}
+
+span.move-icons button {
+    color: #888;
+    margin: 0 !important;
+    font-size: 0.8rem;
+    width: auto;
+}
