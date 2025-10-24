@@ -26,7 +26,7 @@ label.popup-item input {
     color: #000;
 }
 button.columns-btn {
-    padding: inherit;
+    padding: 0 5px;
 }
 button.graph-icon {
     width: auto;
