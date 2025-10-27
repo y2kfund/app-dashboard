@@ -782,7 +782,11 @@ const saveReportName = async (reportId: string) => {
 // Add computed property for active report name from URL
 const activeReportName = computed(() => {
   const urlParams = new URLSearchParams(window.location.search)
-  return urlParams.get('reportName') || ''
+  const reportName = urlParams.get('reportName')
+  if(reportName) {
+    document.title = reportName
+  }
+  return reportName || ''
 })
 </script>
 
