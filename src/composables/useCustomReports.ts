@@ -23,9 +23,11 @@ export function useCustomReports() {
     isLoading.value = true
     try {
       const { data, error } = await supabase
+        .schema('hf')
         .from('custom_reports')
         .select('*')
         .eq('user_id', user.value.id)
+        .eq('archived', false)
         .order('created_at', { ascending: false })
       
       if (error) throw error
@@ -45,6 +47,7 @@ export function useCustomReports() {
     
     try {
       const { error } = await supabase
+        .schema('hf')
         .from('custom_reports')
         .insert([{
           user_id: user.value.id,
@@ -68,6 +71,7 @@ export function useCustomReports() {
     
     try {
       const { error } = await supabase
+        .schema('hf')
         .from('custom_reports')
         .update({ url_params: urlParams })
         .eq('id', reportId)
@@ -86,13 +90,14 @@ export function useCustomReports() {
   }
 
   // Delete report
-  const deleteReport = async (reportId: string) => {
+  const archiveReport = async (reportId: string) => {
     if (!user.value?.id) return
     
     try {
       const { error } = await supabase
+        .schema('hf')
         .from('custom_reports')
-        .delete()
+        .update({ archived: true })
         .eq('id', reportId)
         .eq('user_id', user.value.id)
       
@@ -110,6 +115,6 @@ export function useCustomReports() {
     loadReports,
     saveReport,
     updateReport,
-    deleteReport
+    archiveReport
   }
 }

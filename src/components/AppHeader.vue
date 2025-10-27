@@ -253,7 +253,7 @@
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                     </svg>
                   </button>
-                  <button @click="deleteReport(report.id)" class="delete-btn">×</button>
+                  <button @click="archiveReport(report.id)" class="delete-btn" title="Archive Report">×</button>
                 </div>
               </div>
             </div>
@@ -370,7 +370,7 @@ const reportsDropdownRef = ref<HTMLElement>()
 const newReportName = ref('')
 const editingReportId = ref<string | null>(null)
 const editingReportName = ref('')
-const { reports, isLoading, loadReports, saveReport, updateReport, deleteReport } = useCustomReports()
+const { reports, isLoading, loadReports, saveReport, updateReport, archiveReport } = useCustomReports()
 
 // Timeline and conversation modal state
 const showConversationModal = ref(false)
