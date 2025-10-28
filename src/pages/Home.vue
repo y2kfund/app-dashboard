@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, provide, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, provide, onBeforeUnmount, nextTick, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Positions } from '@y2kfund/positions'
 import { Summary } from '@y2kfund/summary'
@@ -333,6 +333,56 @@ function saveGridLayout(e) {
   }))
   setLayoutToUrl(layout)
 }
+/**
+ * Automatic resize grid based on content height
+ */
+function debounce(fn, delay) {
+  let timer: number | undefined
+  return (...args) => {
+    clearTimeout(timer)
+    timer = window.setTimeout(() => fn(...args), delay)
+  }
+}
+
+const resizeObservers = ref<Record<string, ResizeObserver>>({})
+
+watch(windowColumns, (cols) => {
+  nextTick(() => {
+    cols.forEach(col => {
+      const el = gridstackRef.value?.querySelector(`[data-gs-id="${col.id}"] .grid-stack-item-content .dashboard-container`)
+      if (el && !resizeObservers.value[col.id]) {
+        const debouncedResize = debounce((entry, gridItem, cellHeight) => {
+          if (gridInstance.value) {
+            const newHeight = Math.ceil(entry.contentRect.height / cellHeight)
+            // Only update if height is different
+            const node = gridInstance.value.engine.nodes.find(n => n.el === gridItem)
+            if (node && newHeight > 0 && node.h !== newHeight) {
+              gridInstance.value.update(gridItem, { h: newHeight })
+            }
+          }
+        }, 100) // 100ms debounce
+
+        const observer = new ResizeObserver(entries => {
+          for (const entry of entries) {
+            const gridItem = entry.target.closest('.grid-stack-item')
+            if (gridItem && gridInstance.value) {
+              const cellHeight = gridInstance.value.opts.cellHeight as number
+              debouncedResize(entry, gridItem, cellHeight)
+            }
+          }
+        })
+        observer.observe(el)
+        resizeObservers.value[col.id] = observer
+      }
+    })
+  })
+}, { immediate: true })
+
+onUnmounted(() => {
+  // Disconnect all observers
+  Object.values(resizeObservers.value).forEach(obs => obs.disconnect())
+  resizeObservers.value = {}
+})
 </script>
 
 <template>
