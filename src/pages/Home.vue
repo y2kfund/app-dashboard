@@ -80,6 +80,10 @@ const updateUrlParams = () => {
   } else {
     url.searchParams.delete('minimizedApps')
   }
+
+  // Update dashboardModes param
+  url.searchParams.set('dashboardModes', encodeURIComponent(JSON.stringify(componentModes.value)))
+
   window.history.replaceState({}, '', url.toString())
 }
 
@@ -173,6 +177,7 @@ const loadFromUrlParams = () => {
   if (restoredColumns.length > 0) {
     columns.value = restoredColumns
   }
+
   const restoredModes = getModesFromUrl()
   if (Object.keys(restoredModes).length > 0) {
     componentModes.value = restoredModes
@@ -229,6 +234,7 @@ const handleMinimize = (columnId: string) => {
   }
   else {
     componentModes.value[columnId] = 'tab'
+    updateUrlParams()
   }
   
   nextTick(() => {
@@ -241,7 +247,7 @@ const handleMinimize = (columnId: string) => {
   })
 }
 
-const handleRestore = (columnId: string) => {
+/*const handleRestore = (columnId: string) => {
   componentModes.value[columnId] = 'window'
   nextTick(() => {
     if (gridInstance.value) {
@@ -252,7 +258,7 @@ const handleRestore = (columnId: string) => {
       }
     }
   })
-}
+}*/
 
 // Watch for changes and update URL
 watch(componentModes, updateUrlParams, { deep: true })
@@ -510,9 +516,8 @@ function addGrid(typeId: string) {
     />
 
     <div class="dashboard-topbar">
-      <!-- Minimized apps tabs bar -->
-      <div class="tabs-bar">
-        <span class="tabs-label">Minimized:</span>
+      <div class="tabs-bar" style="background: none;border: none;box-shadow: none;padding: 0;">
+        <!--<span class="tabs-label">Minimized:</span>
         <button
           v-for="column in tabColumns"
           :key="`tab-${column.id}`"
@@ -521,11 +526,11 @@ function addGrid(typeId: string) {
           :title="`Click to restore ${column.title} app`"
         >
           {{ column.title }}
-        </button>
+        </button>-->
       </div>
       <!-- Add grid dropdown -->
       <div class="add-grid-dropdown">
-        <button class="add-grid-icon-btn" @click="showAddGridMenu = !showAddGridMenu">
+        <button class="add-grid-icon-btn" @click="showAddGridMenu = !showAddGridMenu" title="Add Grid">
           <svg width="24" height="24" fill="none">
             <path d="M12 8v8M8 12h8" stroke="white" stroke-width="2" stroke-linecap="round"/>
           </svg>
@@ -711,7 +716,7 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.25rem 0.75rem;
+  /*padding: 0.25rem 0.75rem;*/
   background: #f3f4f6;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
@@ -749,9 +754,10 @@ p {
 }
 
 .add-grid-dropdown {
-  position: relative;
-  display: flex;
-  align-items: center;
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  z-index: 1050;
 }
 
 .add-grid-icon-btn {

@@ -61,3 +61,6 @@ span.move-icons button {
     font-size: 0.8rem;
     width: auto;
 }
+.btn-minimize {
+  color: #000 !important;
+}
