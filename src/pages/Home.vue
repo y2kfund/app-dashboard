@@ -22,6 +22,7 @@ import { GridStack } from 'gridstack'
 const { user } = useAuth()
 const supabase = useSupabase()
 const router = useRouter()
+const showAddGridMenu = ref(false)
 
 // Computed property for current user ID
 const currentUserId = computed(() => user.value?.id || undefined)
@@ -34,17 +35,18 @@ interface Column {
   title: string
   content: string
   component?: any
+  window?: string
 }
 
 type ComponentMode = 'window' | 'tab'
 
 const columns = ref<Column[]>([
-  { id: 'summary', title: 'Summary', content: '', component: Summary },
-  { id: 'positions', title: 'Positions', content: '', component: Positions },
-  { id: 'thesis', title: 'Thesis', content: '', component: Thesis },
-  { id: 'tasks', title: 'Tasks', content: '', component: Tasks },
-  { id: 'trades', title: 'Trades', content: '', component: Trades },
-  { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard }
+  { id: 'summary', title: 'Summary', content: '', component: Summary, window: 'window_1' },
+  { id: 'positions', title: 'Positions', content: '', component: Positions, window: 'window_1' },
+  { id: 'thesis', title: 'Thesis', content: '', component: Thesis, window: 'window_1' },
+  { id: 'tasks', title: 'Tasks', content: '', component: Tasks, window: 'window_1' },
+  { id: 'trades', title: 'Trades', content: '', component: Trades, window: 'window_1' },
+  { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard, window: 'window_1' }
 ])
 
 // Track mode for each component (window = visible, tab = minimized)
@@ -98,10 +100,60 @@ function setLayoutToUrl(layout: any[]) {
   const url = new URL(window.location.href)
   if (layout.length > 0) {
     url.searchParams.set('dashboardLayout', encodeURIComponent(JSON.stringify(layout)))
+    url.searchParams.set('dashboardColumns', encodeURIComponent(JSON.stringify(columns.value.map(col => ({
+      id: col.id,
+      typeId: col.id.split('_')[0],
+      window: col.window
+    })))))
+    url.searchParams.set('dashboardModes', encodeURIComponent(JSON.stringify(componentModes.value)))
   } else {
     url.searchParams.delete('dashboardLayout')
+    url.searchParams.delete('dashboardColumns')
+    url.searchParams.delete('dashboardModes')
   }
   window.history.replaceState({}, '', url.toString())
+}
+
+function getModesFromUrl(): Record<string, ComponentMode> {
+  const urlParams = new URLSearchParams(window.location.search)
+  const modesParam = urlParams.get('dashboardModes')
+  if (modesParam) {
+    try {
+      return JSON.parse(decodeURIComponent(modesParam))
+    } catch (e) {
+      console.error('Failed to parse dashboardModes param', e)
+    }
+  }
+  return {}
+}
+
+function getColumnsFromUrl(): Column[] {
+  const urlParams = new URLSearchParams(window.location.search)
+  const columnsParam = urlParams.get('dashboardColumns')
+  if (columnsParam) {
+    try {
+      const arr = JSON.parse(decodeURIComponent(columnsParam))
+      return arr.map((col: any) => {
+        const type = gridTypes.find(t => t.id === col.typeId)
+        let windowId = col.window
+        if (!windowId) {
+          // If id is like 'positions_2', use 'window_2'
+          const match = col.id.match(/_(\d+)$/)
+          windowId = match ? `window_${match[1]}` : 'window_1'
+        }
+        return {
+          id: col.id,
+          title: `${type?.title || col.typeId}`,
+          content: '',
+          component: type?.component,
+          window: windowId
+        }
+      })
+    } catch (e) {
+      console.error('Failed to parse dashboardColumns param', e)
+    }
+  }
+  return []
 }
 
 // --- Replace loadFromUrlParams to also restore layout from URL ---
@@ -116,6 +168,16 @@ const loadFromUrlParams = () => {
       componentModes.value[id] = 'tab'
     })
   }
+
+  const restoredColumns = getColumnsFromUrl()
+  if (restoredColumns.length > 0) {
+    columns.value = restoredColumns
+  }
+  const restoredModes = getModesFromUrl()
+  if (Object.keys(restoredModes).length > 0) {
+    componentModes.value = restoredModes
+  }
+  
   // Restore visible components at correct positions
   nextTick(() => {
     if (gridInstance.value) {
@@ -123,7 +185,7 @@ const loadFromUrlParams = () => {
       windowColumns.value.forEach((col) => {
         const el = gridstackRef.value?.querySelector(`[data-gs-id="${col.id}"]`)
         if (el && !gridInstance.value.engine.nodes.find(n => n.el === el)) {
-          gridInstance.value.addWidget(el, {x: colIdx, y: 0, width: 1, height: 5})
+          gridInstance.value.makeWidget(el, {x: colIdx, y: 0, width: 1, height: 5})
           colIdx++
         }
       })
@@ -157,7 +219,18 @@ const loadFromUrlParams = () => {
 
 // Component mode management
 const handleMinimize = (columnId: string) => {
-  componentModes.value[columnId] = 'tab'
+  if (/_\d+$/.test(columnId)) {
+    // Remove from columns and componentModes
+    columns.value = columns.value.filter(col => col.id !== columnId)
+    delete componentModes.value[columnId]
+    // Update URL params
+    updateUrlParams()
+    saveGridLayout()
+  }
+  else {
+    componentModes.value[columnId] = 'tab'
+  }
+  
   nextTick(() => {
     if (gridInstance.value) {
       const node = gridInstance.value.engine.nodes.find(n => n.el.getAttribute('data-gs-id') === columnId)
@@ -175,7 +248,7 @@ const handleRestore = (columnId: string) => {
       const el = gridstackRef.value?.querySelector(`[data-gs-id="${columnId}"]`)
       if (el) {
         const pos = getNextAvailablePosition(gridInstance.value)
-        gridInstance.value.addWidget(el, {x: pos.x, y: pos.y, width: 1, height: 5})
+        gridInstance.value.makeWidget(el, { x: pos.x, y: pos.y, width: 1, height: 5 })
       }
     }
   })
@@ -383,6 +456,43 @@ onUnmounted(() => {
   Object.values(resizeObservers.value).forEach(obs => obs.disconnect())
   resizeObservers.value = {}
 })
+
+// List of available grid types
+const gridTypes = [
+  { id: 'summary', title: 'Summary', component: Summary },
+  { id: 'positions', title: 'Positions', component: Positions },
+  { id: 'thesis', title: 'Thesis', component: Thesis },
+  { id: 'tasks', title: 'Tasks', component: Tasks },
+  { id: 'trades', title: 'Trades', component: Trades },
+  { id: 'aiTimelineCard', title: 'aiTimelineCard', component: aiAnalyseTimelineConversationCard }
+]
+
+// Add a new grid instance
+function addGrid(typeId: string) {
+  const type = gridTypes.find(t => t.id === typeId)
+  if (!type) return
+  const count = columns.value.filter(c => c.id.startsWith(typeId)).length + 1
+  const newId = `${typeId}_${count}`
+  const windowId = `window_${count}`
+  columns.value.push({
+    id: newId,
+    title: `${type.title} ${count}`,
+    content: '',
+    component: type.component,
+    window: windowId
+  })
+  componentModes.value[newId] = 'window'
+  nextTick(() => {
+    if (gridInstance.value) {
+      const pos = getNextAvailablePosition(gridInstance.value)
+      const el = gridstackRef.value?.querySelector(`[data-gs-id="${newId}"]`)
+      if (el) {
+        gridInstance.value.makeWidget(el, { x: pos.x, y: pos.y, width: 1, height: 5 })
+        saveGridLayout()
+      }
+    }
+  })
+}
 </script>
 
 <template>
@@ -399,18 +509,38 @@ onUnmounted(() => {
       @close="closeDropdown"
     />
 
-    <!-- Minimized apps tabs bar -->
-    <div v-if="tabColumns.length > 0" class="tabs-bar">
-      <span class="tabs-label">Minimized:</span>
-      <button
-        v-for="column in tabColumns"
-        :key="`tab-${column.id}`"
-        @click="handleRestore(column.id)"
-        class="app-tab"
-        :title="`Click to restore ${column.title} app`"
-      >
-        {{ column.title }}
-      </button>
+    <div class="dashboard-topbar">
+      <!-- Minimized apps tabs bar -->
+      <div class="tabs-bar">
+        <span class="tabs-label">Minimized:</span>
+        <button
+          v-for="column in tabColumns"
+          :key="`tab-${column.id}`"
+          @click="handleRestore(column.id)"
+          class="app-tab"
+          :title="`Click to restore ${column.title} app`"
+        >
+          {{ column.title }}
+        </button>
+      </div>
+      <!-- Add grid dropdown -->
+      <div class="add-grid-dropdown">
+        <button class="add-grid-icon-btn" @click="showAddGridMenu = !showAddGridMenu">
+          <svg width="24" height="24" fill="none">
+            <path d="M12 8v8M8 12h8" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div v-if="showAddGridMenu" class="add-grid-menu">
+          <button
+            v-for="type in gridTypes"
+            :key="type.id"
+            @click="addGrid(type.id); showAddGridMenu = false"
+            class="add-grid-menu-item"
+          >
+            {{ type.title }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="dashboard-grid">
@@ -423,72 +553,18 @@ onUnmounted(() => {
           >
             <div class="grid-stack-item-content dashboard-column">
               <section class="card">
-                <!-- Summary content -->
-                <template v-if="column.id === 'summary'">
-                  <Summary 
-                    :show-header-link="true" 
-                    :user-id="currentUserId"
-                    @minimize="handleMinimize('summary')" 
-                  />
-                </template>
-                
-                <!-- Positions component -->
-                <template v-else-if="column.id === 'positions'">
-                  <Positions 
-                    accountId="demo" 
-                    :show-header-link="true" 
-                    :user-id="currentUserId"
-                    @minimize="handleMinimize('positions')" 
-                  />
-                </template>
-
-                <!-- Thesis component with navigation -->
-                <template v-else-if="column.id === 'thesis'">
-                  <Thesis 
-                    :show-header-link="true"
-                    :user-id="currentUserId"
-                    @minimize="handleMinimize('thesis')"
-                    @navigate="navigateToThesis"
-                  />
-                </template>
-
-                <!-- Tasks component with navigation -->
-                <template v-else-if="column.id === 'tasks'">
-                  <Tasks 
-                    :show-header-link="true"
-                    :user-id="currentUserId"
-                    @minimize="handleMinimize('tasks')"
-                    @navigate="navigateToTasks"
-                  />
-                </template>
-
-                <!-- Trades component with navigation -->
-                <template v-else-if="column.id === 'trades'">
-                  <Trades 
-                    :show-header-link="true"
-                    :user-id="currentUserId"
-                    @minimize="handleMinimize('trades')"
-                    @navigate="navigateToTrades"
-                  />
-                </template>
-
-                <!-- AI Timeline Card -->
-                <template v-else-if="column.id === 'aiTimelineCard'">
-                  <aiAnalyseTimelineConversationCard
-                    v-if="selectedConversation"
-                    :date="selectedDate"
-                    :conversations="[selectedConversation]"
-                    :is-open="true"
-                    :supabase-client="supabase"
-                    :user-id="currentUserId"
-                    @close="closeaiAnalyseTimelineConversationCard"
-                  />
-                </template>
-
-                <!-- Other column content -->
-                <template v-else>
-                  <p>{{ column.content }}</p>
-                </template>
+                <!-- Render by type, pass window prop as column.id -->
+                <component
+                  :is="column.component"
+                  v-bind="{
+                    window: column.window,
+                    accountId: 'demo',
+                    showHeaderLink: true,
+                    userId: currentUserId
+                  }"
+                  @minimize="handleMinimize(column.id)"
+                  @navigate="column.id.startsWith('thesis') ? navigateToThesis : column.id.startsWith('tasks') ? navigateToTasks : column.id.startsWith('trades') ? navigateToTrades : undefined"
+                />
               </section>
             </div>
           </div>
@@ -505,12 +581,36 @@ onUnmounted(() => {
   background-color: #f8fafc;
 }
 
-.tabs-bar {
+.add-grid-bar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
   padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.add-grid-btn {
+  padding: 0.25rem 0.75rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.add-grid-btn:hover {
+  background: #1d4ed8;
+}
+
+.tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
   background: white;
   border-radius: 0.5rem;
   border: 1px solid rgba(0,0,0,.1);
@@ -605,5 +705,98 @@ p {
 .dashboard-grid, .grid-stack {
   width: 100%;
   overflow: visible;
+}
+.dashboard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tabs-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.app-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.app-tab:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+.add-grid-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.add-grid-icon-btn {
+  background: #2563eb;
+  border: none;
+  border-radius: 50%;
+  padding: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.add-grid-icon-btn:hover {
+  background: #1d4ed8;
+}
+
+.add-grid-menu {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  min-width: 160px;
+  z-index: 10;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+}
+.add-grid-menu-item {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #2563eb;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.add-grid-icon-btn svg {
+  display: block;
+  stroke: white;
+}
+.add-grid-menu-item:hover {
+  background: #f3f4f6;
 }
 </style>
