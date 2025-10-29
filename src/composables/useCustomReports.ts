@@ -39,6 +39,49 @@ export function useCustomReports() {
     }
   }
 
+  const setDefaultReport = async (reportId: string) => {
+    if (!user.value?.id) return
+    try {
+      // Unset previous default
+      await supabase
+        .schema('hf')
+        .from('custom_reports')
+        .update({ is_default: false })
+        .eq('user_id', user.value.id)
+      // Set new default
+      await supabase
+        .schema('hf')
+        .from('custom_reports')
+        .update({ is_default: true })
+        .eq('id', reportId)
+        .eq('user_id', user.value.id)
+      await loadReports()
+    } catch (error) {
+      console.error('Failed to set default report:', error)
+      throw error
+    }
+  }
+
+  // Get default report
+  const getDefaultReport = async () => {
+    if (!user.value?.id) return null
+    try {
+      const { data, error } = await supabase
+        .schema('hf')
+        .from('custom_reports')
+        .select('*')
+        .eq('user_id', user.value.id)
+        .eq('is_default', true)
+        .eq('archived', false)
+        .limit(1)
+        .single()
+      if (error) return null
+      return data
+    } catch (error) {
+      return null
+    }
+  }
+
   // Save report
   const saveReport = async (name: string) => {
     if (!user.value?.id || !name.trim()) return
@@ -115,6 +158,8 @@ export function useCustomReports() {
     loadReports,
     saveReport,
     updateReport,
-    archiveReport
+    archiveReport,
+    setDefaultReport,
+    getDefaultReport
   }
 }

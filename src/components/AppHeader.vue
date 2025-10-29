@@ -3,7 +3,7 @@
     <div class="header-content">
       <!-- Logo and brand -->
       <div class="brand">
-        <a href="/" class="logo-link">
+        <a href="/" class="logo-link" @click.prevent="handleLogoClick">
           <div class="logo">
             <div class="logo-text">
               <span class="y2k">Y2K</span>
@@ -267,6 +267,16 @@
                     </svg>
                   </button>
                   <button @click="archiveReport(report.id)" class="delete-btn" title="Archive Report">×</button>
+                  <button 
+                    @click="setDefaultReportHandler(report.id)" 
+                    class="default-btn" 
+                    :title="report.is_default ? 'Default report' : 'Set as default'"
+                    :disabled="report.is_default"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2l3 7h7l-5.5 4.5L17 21l-5-3.5L7 21l1.5-7.5L3 9h7z"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -383,7 +393,7 @@ const reportsDropdownRef = ref<HTMLElement>()
 const newReportName = ref('')
 const editingReportId = ref<string | null>(null)
 const editingReportName = ref('')
-const { reports, isLoading, loadReports, saveReport, updateReport, archiveReport } = useCustomReports()
+const { reports, isLoading, loadReports, saveReport, updateReport, archiveReport, setDefaultReport, getDefaultReport } = useCustomReports()
 
 // Timeline and conversation modal state
 const showConversationModal = ref(false)
@@ -405,6 +415,15 @@ const timelineConfig = computed<AnalyzeTimelineConfig>(() => ({
   userId: user.value?.id || '',
   enableDatabase: true
 }))
+
+const setDefaultReportHandler = async (reportId: string) => {
+  try {
+    await setDefaultReport(reportId)
+    alert('Default report set!')
+  } catch (error) {
+    alert('Failed to set default report')
+  }
+}
 
 // Computed properties for user display
 const userName = computed(() => {
@@ -459,6 +478,18 @@ const handleUpdateReport = async (reportId: string) => {
   } catch (error) {
     alert('Failed to update report')
   }
+}
+
+const handleLogoClick = async () => {
+  if (user.value?.id) {
+    const defaultReport = await getDefaultReport()
+    if (defaultReport && defaultReport.url_params) {
+      const url = router.resolve({ path: '/', query: Object.fromEntries(new URLSearchParams(defaultReport.url_params)) }).href
+      window.location.href = url
+      return
+    }
+  }
+  window.location.href = '/'
 }
 
 const loadReport = (report: any) => {
@@ -1591,7 +1622,7 @@ const activeReportName = computed(() => {
   flex-shrink: 0;
 }
 
-.load-btn, .rename-btn, .copy-btn, .delete-btn {
+.load-btn, .rename-btn, .copy-btn, .delete-btn, .default-btn {
   padding: 0.25rem 0.5rem;
   border: none;
   border-radius: 4px;
