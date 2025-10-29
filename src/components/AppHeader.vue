@@ -58,15 +58,14 @@
 
           <div class="refresh-options">
             <button 
-              @click="refreshData('positions')" 
+              @click="refreshData('nlv')" 
               :disabled="isRefreshing"
               class="refresh-option"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <path d="M9 9h6v6H9z"/>
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
               </svg>
-              Positions
+              Net Liquidation Value
             </button>
 
             <button 
@@ -83,14 +82,15 @@
             </button>
 
             <button 
-              @click="refreshData('nlv')" 
+              @click="refreshData('positions')" 
               :disabled="isRefreshing"
               class="refresh-option"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <path d="M9 9h6v6H9z"/>
               </svg>
-              Net Liquidation Value
+              Positions
             </button>
 
             <button 
@@ -103,6 +103,19 @@
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
               </svg>
               Current Market Prices
+            </button>
+
+            <button 
+              @click="refreshData('current-margin-impact')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              Current Margin Impact
             </button>
 
             <button 
@@ -535,13 +548,14 @@ const toggleRefresh = () => {
   }
 }
 
-const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades') => {
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact') => {
   const labels = {
     'positions': 'Positions',
     'maintenance-margin': 'Maintenance Margin',
     'nlv': 'Net Liquidation Value',
     'current-market-price': 'Current Market Prices',
-    'trades': 'Trades'
+    'trades': 'Trades',
+    'current-margin-impact': 'Current Margin Impact'
   }
 
   const statusId = `refresh-${endpoint}-${Date.now()}`
