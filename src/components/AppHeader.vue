@@ -127,6 +127,19 @@
               Trades
             </button>
 
+            <button 
+              @click="refreshData('cash-transactions')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              Cash Transactions
+            </button>
+
             <div class="divider"></div>
 
             <button 
@@ -579,14 +592,15 @@ const toggleRefresh = () => {
   }
 }
 
-const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact') => {
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions') => {
   const labels = {
     'positions': 'Positions',
     'maintenance-margin': 'Maintenance Margin',
     'nlv': 'Net Liquidation Value',
     'current-market-price': 'Current Market Prices',
     'trades': 'Trades',
-    'current-margin-impact': 'Current Margin Impact'
+    'current-margin-impact': 'Current Margin Impact',
+    'cash-transactions': 'Cash Transactions'
   }
 
   const statusId = `refresh-${endpoint}-${Date.now()}`
