@@ -64,3 +64,13 @@ span.move-icons button {
 .btn-minimize {
   color: #000 !important;
 }
+.positions-date-picker label, .positions-date-picker input {
+    width: auto;
+    display: inline-block;
+    padding: 2px 5px;
+}
+.positions-date-picker button {
+    width: auto;
+    padding: 4px 6px;
+    font-size: 0.9rem;
+}
