@@ -32,8 +32,19 @@ export async function onRequest(context) {
       return new Response("Not found", { status: 404 })
     }
 
-    // Serve as binary directly
-    return new Response(data.file_content, {
+    // Decode base64 to Uint8Array if needed (Cloudflare Workers)
+    let pdfBuffer = data.file_content
+    if (typeof pdfBuffer === 'string') {
+      const binary = atob(pdfBuffer)
+      const len = binary.length
+      const bytes = new Uint8Array(len)
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i)
+      }
+      pdfBuffer = bytes
+    }
+
+    return new Response(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${data.file_name || "file.pdf"}"`
