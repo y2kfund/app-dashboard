@@ -823,6 +823,7 @@ const saveReportName = async (reportId: string) => {
 
   try {
     const { error } = await supabase
+      .schema('hf')
       .from('custom_reports')
       .update({ name: editingReportName.value.trim() })
       .eq('id', reportId)
