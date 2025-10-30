@@ -6,12 +6,14 @@ import { Summary } from '@y2kfund/summary'
 import { Thesis } from '@y2kfund/thesis'
 import { Tasks } from '@y2kfund/tasks'
 import { Trades } from '@y2kfund/trades'
+import { CashTransactions } from '@y2kfund/cash-transactions'
 import { aiAnalyseTimelineConversationCard, ConversationDropdown } from '@y2kfund/analyze-timeline'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
 import '@y2kfund/thesis/dist/style.css'
 import '@y2kfund/tasks/dist/style.css'
 import '@y2kfund/trades/dist/style.css'
+import '@y2kfund/cash-transactions/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { useSupabase } from '@y2kfund/core'
 import { eventBus } from '../utils/eventBus'
@@ -46,7 +48,8 @@ const columns = ref<Column[]>([
   { id: 'thesis', title: 'Thesis', content: '', component: Thesis, window: 'window_1' },
   { id: 'tasks', title: 'Tasks', content: '', component: Tasks, window: 'window_1' },
   { id: 'trades', title: 'Trades', content: '', component: Trades, window: 'window_1' },
-  { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard, window: 'window_1' }
+  { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard, window: 'window_1' },
+  { id: 'cashTransactions', title: 'Cash Transactions', content: '', component: CashTransactions, window: 'window_1' }
 ])
 
 // Track mode for each component (window = visible, tab = minimized)
@@ -56,6 +59,7 @@ const componentModes = ref<Record<string, ComponentMode>>({
   thesis: 'window',
   tasks: 'window',
   trades: 'window',
+  cashTransactions: 'window',
   aiTimelineCard: 'tab' // minimized by default
 })
 
@@ -470,6 +474,7 @@ const gridTypes = [
   { id: 'thesis', title: 'Thesis', component: Thesis },
   { id: 'tasks', title: 'Tasks', component: Tasks },
   { id: 'trades', title: 'Trades', component: Trades },
+  { id: 'cashTransactions', title: 'Cash Transactions', component: CashTransactions },
   { id: 'aiTimelineCard', title: 'aiTimelineCard', component: aiAnalyseTimelineConversationCard }
 ]
 
