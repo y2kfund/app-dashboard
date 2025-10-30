@@ -48,17 +48,8 @@ export async function onRequest(context) {
       return new Response("Not found", { status: 404, headers: corsHeaders })
     }
 
-    // Decode Postgres bytea (hex string) to binary
-    function hexToUint8Array(hex) {
-      if (hex.startsWith('\\x')) hex = hex.slice(2)
-      const bytes = new Uint8Array(hex.length / 2)
-      for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(hex.substr(i * 2, 2), 16)
-      }
-      return bytes
-    }
-
-    const pdfBuffer = hexToUint8Array(data.file_content)
+    // No need to decode hex, just use file_content directly
+    const pdfBuffer = data.file_content
 
     return new Response(pdfBuffer, {
       headers: {
