@@ -1,36 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 
 export async function onRequest(context) {
-  const origin = context.request.headers.get('Origin') || '*'
-  const allowedOrigins = [
-    'https://www.y2k.fund',
-    'https://y2k.fund',
-    'http://localhost:5100',
-    'http://localhost:5173',
-    'http://localhost:3000'
-  ]
-  const corsOrigin = allowedOrigins.includes(origin) ? origin : '*'
-  const corsHeaders = {
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Origin': corsOrigin,
-    'Access-Control-Allow-Methods': 'GET,OPTIONS',
-    'Access-Control-Allow-Headers': 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
-    'Content-Type': 'application/pdf'
-  }
-
   try {
     if (context.request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders })
+      return new Response(null, { status: 204 })
     }
 
     if (context.request.method !== 'GET') {
-      return new Response('Method not allowed', { status: 405, headers: corsHeaders })
+      return new Response('Method not allowed', { status: 405 })
     }
 
     const url = new URL(context.request.url)
     const id = url.searchParams.get("id")
     if (!id) {
-      return new Response("Missing id", { status: 400, headers: corsHeaders })
+      return new Response("Missing id", { status: 400 })
     }
 
     // Check env vars
@@ -45,19 +28,28 @@ export async function onRequest(context) {
       .single()
 
     if (error || !data?.file_content) {
-      return new Response("Not found", { status: 404, headers: corsHeaders })
+      return new Response("Not found", { status: 404 })
     }
 
-    // No need to decode hex, just use file_content directly
-    const pdfBuffer = data.file_content
+    // Decode base64 if needed (Cloudflare Workers way)
+    let pdfBuffer = data.file_content
+    if (typeof pdfBuffer === 'string') {
+      const binary = atob(pdfBuffer)
+      const len = binary.length
+      const bytes = new Uint8Array(len)
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i)
+      }
+      pdfBuffer = bytes
+    }
 
     return new Response(pdfBuffer, {
       headers: {
-        ...corsHeaders,
+        "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${data.file_name || "file.pdf"}"`
       }
     })
   } catch (err) {
-    return new Response("Internal error: " + (err?.message || err), { status: 500, headers: corsHeaders })
+    return new Response("Internal error: " + (err?.message || err), { status: 500 })
   }
 }
