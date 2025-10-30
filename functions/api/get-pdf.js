@@ -22,6 +22,7 @@ export async function onRequest(context) {
     const supabase = createClient(supaUrl, supaKey)
 
     const { data, error } = await supabase
+      .schema('hf')
       .from('thesisStockResources')
       .select('file_content,file_name')
       .eq('id', id)
