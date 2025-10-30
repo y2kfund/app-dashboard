@@ -36,10 +36,6 @@ export async function onRequest(context) {
     // Check env vars
     const supaUrl = context.env.VITE_SUPA_URL
     const supaKey = context.env.VITE_SUPA_ANON
-    if (!supaUrl || !supaKey) {
-      return new Response("Supabase env vars missing", { status: 500, headers: corsHeaders })
-    }
-
     const supabase = createClient(supaUrl, supaKey)
 
     const { data, error } = await supabase
@@ -48,19 +44,21 @@ export async function onRequest(context) {
       .eq('id', id)
       .single()
 
-    if (error) {
-      return new Response("Supabase error: " + error.message, { status: 500, headers: corsHeaders })
-    }
-    if (!data?.file_content) {
+    if (error || !data?.file_content) {
       return new Response("Not found", { status: 404, headers: corsHeaders })
     }
 
-    // Convert file_content to Uint8Array if needed
-    let pdfBuffer = data.file_content
-    if (typeof pdfBuffer === "string") {
-      // Supabase may return base64 string for bytea, decode it
-      pdfBuffer = Uint8Array.from(atob(pdfBuffer), c => c.charCodeAt(0))
+    // Decode Postgres bytea (hex string) to binary
+    function hexToUint8Array(hex) {
+      if (hex.startsWith('\\x')) hex = hex.slice(2)
+      const bytes = new Uint8Array(hex.length / 2)
+      for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(hex.substr(i * 2, 2), 16)
+      }
+      return bytes
     }
+
+    const pdfBuffer = hexToUint8Array(data.file_content)
 
     return new Response(pdfBuffer, {
       headers: {
