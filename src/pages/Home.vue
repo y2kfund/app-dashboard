@@ -315,7 +315,6 @@ const closeaiAnalyseTimelineConversationCard = () => {
 const gridstackRef = ref<HTMLDivElement | null>(null)
 const gridInstance = ref<GridStack | null>(null)
 const maximizedWidget = ref<string | null>(null)
-const savedLayouts = ref<Record<string, { x: number; y: number; w: number; h: number }>>({})
 
 const getGridColumns = () => {
   if (window.innerWidth < 640) return 1
@@ -325,86 +324,25 @@ const getGridColumns = () => {
 }
 
 function toggleMaximize(columnId: string) {
-  if (!gridInstance.value) return
-
-  // If already maximized, restore
+  // Use an overlay approach: show the component in a top-layer full-screen panel.
+  // This avoids changing gridstack layout and prevents other cards from reflowing on restore.
   if (maximizedWidget.value === columnId) {
-    restoreMaximized(columnId)
+    // already maximized -> close overlay
+    maximizedWidget.value = null
+    document.body.style.overflow = ''
     return
   }
-
-  // If some other widget is maximized, restore it first
-  if (maximizedWidget.value) {
-    restoreMaximized(maximizedWidget.value)
-  }
-
-  const node = gridInstance.value.engine.nodes.find(n => n.el.getAttribute('data-gs-id') === columnId)
-  if (!node) return
-
-  // Save current layout
-  savedLayouts.value[columnId] = {
-    x: node.x,
-    y: node.y,
-    w: node.w,
-    h: node.h
-  }
-
-  // Compute a large height that covers viewport (in grid rows)
-  const cellHeight = (gridInstance.value.opts.cellHeight as number) || 100
-  const fullHeightRows = Math.max( Math.ceil((window.innerHeight - 120) / cellHeight), 6 )
-
-  // Update node to span all columns and large height
-  const fullW = getGridColumns()
-  try {
-    gridInstance.value.update(node.el, { x: 0, y: 0, w: fullW, h: fullHeightRows, id: columnId })
-  } catch (err) {
-    console.warn('Failed to update widget for maximize', err)
-  }
-
-  // Add maximized CSS class to override GridStack inline positioning
-  node.el.classList.add('is-maximized')
   maximizedWidget.value = columnId
-
-  // allow DOM to update, then compact so other nodes reposition correctly below the maximized item
-  nextTick(() => {
-    setTimeout(() => {
-      try { gridInstance.value?.compact() } catch (e) { /* ignore */ }
-    }, 60)
-  })
-
-  // scroll into view
-  setTimeout(() => {
-    node.el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, 60)
+  // prevent background scroll while overlay is open
+  document.body.style.overflow = 'hidden'
 }
 
-function restoreMaximized(columnId: string) {
-  if (!gridInstance.value) return
-  const node = gridInstance.value.engine.nodes.find(n => n.el.getAttribute('data-gs-id') === columnId)
-  if (!node) return
-
-  const saved = savedLayouts.value[columnId]
-  if (saved) {
-    try {
-      gridInstance.value.update(node.el, { x: saved.x, y: saved.y, w: saved.w, h: saved.h, id: columnId })
-    } catch (err) {
-      console.warn('Failed to restore widget layout', err)
-    }
-    delete savedLayouts.value[columnId]
+function restoreMaximized(columnId: string | null) {
+  if (!columnId) return
+  if (maximizedWidget.value === columnId) {
+    maximizedWidget.value = null
+    document.body.style.overflow = ''
   }
-
-  // remove maximized styling so GridStack can place it normally
-  node.el.classList.remove('is-maximized')
-  if (maximizedWidget.value === columnId) maximizedWidget.value = null
-
-  // let DOM reflect the removed class/updated sizes then force a compact/reflow so other widgets move back up
-  nextTick(() => {
-    setTimeout(() => {
-      try {
-        gridInstance.value?.compact()
-      } catch (e) { /* ignore */ }
-    }, 60)
-  })
 }
 
 onMounted(() => {
@@ -457,8 +395,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   eventBus.off('timeline:show-dropdown', handleTimelineShowDropdown)
   window.removeEventListener('resize', handleResize)
+
   if (maximizedWidget.value) {
-    restoreMaximized(maximizedWidget.value)
+    maximizedWidget.value = null
+    document.body.style.overflow = ''
   }
 })
 
@@ -670,6 +610,29 @@ function addGrid(typeId: string) {
         </template>
       </div>
     </div>
+    <!-- Overlay maximized view (renders the same component in a top layer) -->
+    <div v-if="maximizedWidget" class="overlay" role="dialog" aria-modal="true">
+      <div class="overlay-frame">
+        <div class="overlay-actions">
+          <button class="overlay-close-btn" @click="restoreMaximized(maximizedWidget)">Close</button>
+        </div>
+       <div class="overlay-content">
+          <component
+            :is="columns.find(c => c.id === maximizedWidget)?.component"
+            v-if="columns.find(c => c.id === maximizedWidget)"
+            v-bind="{
+              window: columns.find(c => c.id === maximizedWidget)?.window,
+              accountId: 'demo',
+              showHeaderLink: true,
+              userId: currentUserId
+            }"
+            @minimize="restoreMaximized(maximizedWidget)"
+            @navigate="() => {}"
+          />
+        </div>
+      </div>
+    </div>
+
   </main>
 </template>
 
@@ -898,5 +861,53 @@ p {
 }
 .add-grid-menu-item:hover {
   background: #f3f4f6;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 2200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.overlay-frame {
+  width: 100%;
+  /*max-width: 1200px;*/
+  height: calc(100% - 4rem);
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 40px rgba(2,6,23,0.4);
+}
+
+.overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem;
+  background: rgba(0,0,0,0.02);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.overlay-close-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  width: auto;
+}
+
+.overlay-content {
+  padding: 1rem;
+  height: 100%;
+  overflow: auto;
+  background: transparent;
 }
 </style>
