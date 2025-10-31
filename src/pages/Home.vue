@@ -314,12 +314,97 @@ const closeaiAnalyseTimelineConversationCard = () => {
 
 const gridstackRef = ref<HTMLDivElement | null>(null)
 const gridInstance = ref<GridStack | null>(null)
+const maximizedWidget = ref<string | null>(null)
+const savedLayouts = ref<Record<string, { x: number; y: number; w: number; h: number }>>({})
 
 const getGridColumns = () => {
   if (window.innerWidth < 640) return 1
   if (window.innerWidth < 900) return 2
   if (window.innerWidth < 1200) return 3
   return 8
+}
+
+function toggleMaximize(columnId: string) {
+  if (!gridInstance.value) return
+
+  // If already maximized, restore
+  if (maximizedWidget.value === columnId) {
+    restoreMaximized(columnId)
+    return
+  }
+
+  // If some other widget is maximized, restore it first
+  if (maximizedWidget.value) {
+    restoreMaximized(maximizedWidget.value)
+  }
+
+  const node = gridInstance.value.engine.nodes.find(n => n.el.getAttribute('data-gs-id') === columnId)
+  if (!node) return
+
+  // Save current layout
+  savedLayouts.value[columnId] = {
+    x: node.x,
+    y: node.y,
+    w: node.w,
+    h: node.h
+  }
+
+  // Compute a large height that covers viewport (in grid rows)
+  const cellHeight = (gridInstance.value.opts.cellHeight as number) || 100
+  const fullHeightRows = Math.max( Math.ceil((window.innerHeight - 120) / cellHeight), 6 )
+
+  // Update node to span all columns and large height
+  const fullW = getGridColumns()
+  try {
+    gridInstance.value.update(node.el, { x: 0, y: 0, w: fullW, h: fullHeightRows, id: columnId })
+  } catch (err) {
+    console.warn('Failed to update widget for maximize', err)
+  }
+
+  // Add maximized CSS class to override GridStack inline positioning
+  node.el.classList.add('is-maximized')
+  maximizedWidget.value = columnId
+
+  // allow DOM to update, then compact so other nodes reposition correctly below the maximized item
+  nextTick(() => {
+    setTimeout(() => {
+      try { gridInstance.value?.compact() } catch (e) { /* ignore */ }
+    }, 60)
+  })
+
+  // scroll into view
+  setTimeout(() => {
+    node.el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, 60)
+}
+
+function restoreMaximized(columnId: string) {
+  if (!gridInstance.value) return
+  const node = gridInstance.value.engine.nodes.find(n => n.el.getAttribute('data-gs-id') === columnId)
+  if (!node) return
+
+  const saved = savedLayouts.value[columnId]
+  if (saved) {
+    try {
+      gridInstance.value.update(node.el, { x: saved.x, y: saved.y, w: saved.w, h: saved.h, id: columnId })
+    } catch (err) {
+      console.warn('Failed to restore widget layout', err)
+    }
+    delete savedLayouts.value[columnId]
+  }
+
+  // remove maximized styling so GridStack can place it normally
+  node.el.classList.remove('is-maximized')
+  if (maximizedWidget.value === columnId) maximizedWidget.value = null
+
+  // let DOM reflect the removed class/updated sizes then force a compact/reflow so other widgets move back up
+  nextTick(() => {
+    setTimeout(() => {
+      try {
+        gridInstance.value?.compact()
+      } catch (e) { /* ignore */ }
+    }, 60)
+  })
 }
 
 onMounted(() => {
@@ -372,6 +457,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
   eventBus.off('timeline:show-dropdown', handleTimelineShowDropdown)
   window.removeEventListener('resize', handleResize)
+  if (maximizedWidget.value) {
+    restoreMaximized(maximizedWidget.value)
+  }
 })
 
 const handleResize = () => {
@@ -573,6 +661,7 @@ function addGrid(typeId: string) {
                     userId: currentUserId
                   }"
                   @minimize="handleMinimize(column.id)"
+                  @maximize="toggleMaximize(column.id)"
                   @navigate="column.id.startsWith('thesis') ? navigateToThesis : column.id.startsWith('tasks') ? navigateToTasks : column.id.startsWith('trades') ? navigateToTrades : undefined"
                 />
               </section>
