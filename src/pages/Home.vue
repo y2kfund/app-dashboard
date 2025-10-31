@@ -390,17 +390,28 @@ onMounted(() => {
     }
   })
   window.addEventListener('resize', handleResize)
+  window.addEventListener('keydown', handleKeydown)
 })
 
 onBeforeUnmount(() => {
   eventBus.off('timeline:show-dropdown', handleTimelineShowDropdown)
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('keydown', handleKeydown)
 
   if (maximizedWidget.value) {
     maximizedWidget.value = null
     document.body.style.overflow = ''
   }
 })
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' || e.key === 'Esc') {
+    if (maximizedWidget.value) {
+      maximizedWidget.value = null
+      document.body.style.overflow = ''
+    }
+  }
+}
 
 const handleResize = () => {
   if (gridInstance.value) {
