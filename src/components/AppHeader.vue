@@ -197,12 +197,12 @@
           </button>
           
           <!-- Active Report Name Display -->
-          <div v-if="activeReportName" class="active-report-badge">
+          <div v-if="activeReportName && activeReportUrl" class="active-report-badge">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14,2 14,8 20,8"/>
             </svg>
-            <span class="active-report-name">{{ activeReportName }}</span>
+            <a :href="activeReportUrl" class="active-report-link">{{ activeReportName }}</a>
             <!--a @click="clearActiveReport" class="clear-report-btn" title="Clear report">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"/>
@@ -460,6 +460,26 @@ const userName = computed(() => {
     return user.value.email.split('@')[0]
   }
   return 'User'
+})
+
+const activeReportUrl = computed(() => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const reportName = urlParams.get('reportName')
+  console.log('reportName: ', reportName)
+  if (!reportName) return ''
+  
+  // Find the report with matching name
+  const report = reports.value.find(r => r.name === reportName)
+  console.log('report: ', reports, report)
+  if (!report) return ''
+  
+  // Build the full URL with the report's parameters
+  let url = window.location.origin + route.path
+  if (report.url_params) {
+    url += '?' + report.url_params
+  }
+  
+  return url
 })
 
 const userAvatar = computed(() => {
@@ -815,6 +835,7 @@ const handleClickOutside = (event: Event) => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  loadReports()
 })
 
 onUnmounted(() => {
@@ -1785,5 +1806,29 @@ const activeReportName = computed(() => {
 
 span.active-report-name {
     padding-left: 2px;
+}
+.active-report-badge {
+  text-align: center;
+  margin-top: 2px;
+  font-size: 0.875rem;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.active-report-link {
+  padding-left: 2px;
+  color: #8b5cf6;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-bottom: 1px dashed #8b5cf6;
+}
+
+.active-report-link:hover {
+  color: #7c3aed;
+  border-bottom-color: #7c3aed;
+  border-bottom-style: solid;
 }
 </style>
