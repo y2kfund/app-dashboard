@@ -140,6 +140,19 @@
               Cash Transactions
             </button>
 
+            <button 
+              @click="refreshData('transfers')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              Transfers
+            </button>
+
             <div class="divider"></div>
 
             <button 
@@ -592,7 +605,7 @@ const toggleRefresh = () => {
   }
 }
 
-const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions') => {
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers') => {
   const labels = {
     'positions': 'Positions',
     'maintenance-margin': 'Maintenance Margin',
@@ -600,7 +613,8 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' 
     'current-market-price': 'Current Market Prices',
     'trades': 'Trades',
     'current-margin-impact': 'Current Margin Impact',
-    'cash-transactions': 'Cash Transactions'
+    'cash-transactions': 'Cash Transactions',
+    'transfers': 'Transfers'
   }
 
   const statusId = `refresh-${endpoint}-${Date.now()}`
@@ -663,12 +677,15 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' 
 }
 
 const refreshAllData = async () => {
-  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades'> = [
+  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'transfers' | 'cash-transactions' | 'current-margin-impact'> = [
     'positions', 
     'maintenance-margin', 
     'nlv',
     'current-market-price',
-    'trades'
+    'trades',
+    'transfers',
+    'cash-transactions',
+    'current-margin-impact'
   ]
 
   isRefreshing.value = true
