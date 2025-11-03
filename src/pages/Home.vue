@@ -6,6 +6,7 @@ import { Summary } from '@y2kfund/summary'
 import { Thesis } from '@y2kfund/thesis'
 import { Tasks } from '@y2kfund/tasks'
 import { Trades } from '@y2kfund/trades'
+import { Transfers } from '@y2kfund/transfers'
 import { CashTransactions } from '@y2kfund/cash-transactions'
 import { aiAnalyseTimelineConversationCard, ConversationDropdown } from '@y2kfund/analyze-timeline'
 import '@y2kfund/positions/dist/style.css'
@@ -13,6 +14,7 @@ import '@y2kfund/summary/dist/style.css'
 import '@y2kfund/thesis/dist/style.css'
 import '@y2kfund/tasks/dist/style.css'
 import '@y2kfund/trades/dist/style.css'
+import '@y2kfund/transfers/dist/style.css'
 import '@y2kfund/cash-transactions/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { useSupabase } from '@y2kfund/core'
@@ -48,6 +50,7 @@ const columns = ref<Column[]>([
   { id: 'thesis', title: 'Thesis', content: '', component: Thesis, window: 'window_1' },
   { id: 'tasks', title: 'Tasks', content: '', component: Tasks, window: 'window_1' },
   { id: 'trades', title: 'Trades', content: '', component: Trades, window: 'window_1' },
+  { id: 'transfers', title: 'Transfers', content: '', component: Transfers, window: 'window_1' },
   { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard, window: 'window_1' },
   { id: 'cashTransactions', title: 'Cash Transactions', content: '', component: CashTransactions, window: 'window_1' }
 ])
@@ -59,6 +62,7 @@ const componentModes = ref<Record<string, ComponentMode>>({
   thesis: 'window',
   tasks: 'window',
   trades: 'window',
+  transfers: 'window',
   cashTransactions: 'window',
   aiTimelineCard: 'tab' // minimized by default
 })
@@ -432,6 +436,10 @@ const navigateToTrades = () => {
   router.push('/trades')
 }
 
+const navigateToTransfers = () => {
+  router.push('/transfers')
+}
+
 function getNextAvailablePosition(grid: GridStack) {
   const usedColumns = new Set<number>();
   grid.engine.nodes.forEach(node => {
@@ -513,6 +521,7 @@ const gridTypes = [
   { id: 'thesis', title: 'Thesis', component: Thesis },
   { id: 'tasks', title: 'Tasks', component: Tasks },
   { id: 'trades', title: 'Trades', component: Trades },
+  { id: 'transfers', title: 'Transfers', component: Transfers },
   { id: 'cashTransactions', title: 'Cash Transactions', component: CashTransactions },
   { id: 'aiTimelineCard', title: 'aiTimelineCard', component: aiAnalyseTimelineConversationCard }
 ]
@@ -613,7 +622,7 @@ function addGrid(typeId: string) {
                   }"
                   @minimize="handleMinimize(column.id)"
                   @maximize="toggleMaximize(column.id)"
-                  @navigate="column.id.startsWith('thesis') ? navigateToThesis : column.id.startsWith('tasks') ? navigateToTasks : column.id.startsWith('trades') ? navigateToTrades : undefined"
+                  @navigate="column.id.startsWith('thesis') ? navigateToThesis : column.id.startsWith('tasks') ? navigateToTasks : column.id.startsWith('trades') ? navigateToTrades : column.id.startsWith('transfers') ? navigateToTransfers : undefined"
                 />
               </section>
             </div>
