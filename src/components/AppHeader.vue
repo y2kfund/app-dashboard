@@ -476,7 +476,7 @@ const activeReportUrl = computed(() => {
   // Build the full URL with the report's parameters
   let url = window.location.origin + route.path
   if (report.url_params) {
-    url += '?' + report.url_params
+    url += '?' + report.url_params + `&reportName=${encodeURIComponent(report.name)}`
   }
   
   return url

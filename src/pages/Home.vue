@@ -356,13 +356,15 @@ onMounted(() => {
     if (gridstackRef.value) {
       gridInstance.value = GridStack.init({ 
         column: getGridColumns(),
-        float: true,
+        float: false,
         margin: 10,
         cellHeight: 100,
         resizable: {
           handles: 'e, se, s, sw, w',
           minHeight: 60
-        }
+        },
+        disableOneColumnMode: false, // Allow one column mode on mobile
+        animate: true // Smooth animations when items move
       }, gridstackRef.value);
 
       // Restore layout from URL param
@@ -484,10 +486,10 @@ watch(windowColumns, (cols) => {
         const debouncedResize = debounce((entry, gridItem, cellHeight) => {
           if (gridInstance.value) {
             const newHeight = Math.ceil(entry.contentRect.height / cellHeight)
-            // Only update if height is different
             const node = gridInstance.value.engine.nodes.find(n => n.el === gridItem)
             if (node && newHeight > 0 && node.h !== newHeight) {
               gridInstance.value.update(gridItem, { h: newHeight })
+              gridInstance.value.compact()
             }
           }
         }, 100) // 100ms debounce
