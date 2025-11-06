@@ -474,7 +474,7 @@ const activeReportUrl = computed(() => {
   if (!report) return ''
   
   // Build the full URL with the report's parameters
-  let url = window.location.origin + route.path
+  let url = window.location.origin
   if (report.url_params) {
     url += '?' + report.url_params + `&reportName=${encodeURIComponent(report.name)}`
   }
@@ -553,7 +553,7 @@ const loadReport = (report: any) => {
     
     // Create the new URL
     const newUrl = router.resolve({ 
-      path: route.path,
+      path: '/',
       query 
     }).href
     
@@ -562,7 +562,7 @@ const loadReport = (report: any) => {
   } else {
     // If no parameters, just navigate with report name and reload
     const newUrl = router.resolve({ 
-      path: route.path,
+      path: '/',
       query: { reportName: report.name }
     }).href
     window.location.href = newUrl
