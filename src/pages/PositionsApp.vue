@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Positions } from '@y2kfund/positions'
 import '@y2kfund/positions/dist/style.css'
+import { useAuth } from '../composables/useAuth'
+
+const { user } = useAuth()
 
 interface Props {
   accountId?: string
 }
+
+const currentUserId = computed(() => user.value?.id || undefined)
 
 const props = withDefaults(defineProps<Props>(), {
   accountId: 'demo'
@@ -27,7 +33,8 @@ function handleRowClick(row: any) {
       <Positions 
         :account-id="accountId"
         :show-header-link="false"
-        @row-click="handleRowClick"
+        @row-click="handleRowClick" 
+        :userId="currentUserId"
       />
     </main>
   </div>

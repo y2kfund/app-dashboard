@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Summary } from '@y2kfund/summary'
 import '@y2kfund/summary/dist/style.css'
+import { useAuth } from '../composables/useAuth'
+
+const { user } = useAuth()
 
 interface Props {
   accountId?: string
 }
+
+const currentUserId = computed(() => user.value?.id || undefined)
 
 const props = withDefaults(defineProps<Props>(), {
   accountId: 'demo'
@@ -20,7 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
       </nav>
     </header>
     <main class="app-content">
-      <Summary :account-id="accountId" />
+      <Summary :account-id="accountId" :userId="currentUserId" />
     </main>
   </div>
 </template>
