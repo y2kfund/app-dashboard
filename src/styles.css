@@ -74,3 +74,6 @@ span.move-icons button {
     padding: 4px 6px;
     font-size: 0.9rem;
 }
+.tabulator-row:nth-child(2n) {
+    background-color: #fff !important;
+}
