@@ -21,12 +21,12 @@ function handleNavigate() {
 
 <template>
   <div class="tasks-app">
-    <header class="app-header">
+    <!--header class="app-header">
       <h1>Tasks</h1>
       <nav class="breadcrumb">
         <router-link to="/">Dashboard</router-link> / Tasks
       </nav>
-    </header>
+    </header-->
     <main class="app-content">
       <Tasks 
         :user-id="currentUserId"

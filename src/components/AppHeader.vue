@@ -473,11 +473,8 @@ const activeReportUrl = computed(() => {
   console.log('report: ', reports, report)
   if (!report) return ''
   
-  // Build the full URL with the report's parameters
-  let url = window.location.origin
-  if (report.url_params) {
-    url += '?' + report.url_params + `&reportName=${encodeURIComponent(report.name)}`
-  }
+  // Build the full URL with the report's saved path
+  const url = window.location.origin + report.url_params
   
   return url
 })
@@ -526,22 +523,11 @@ const handleUpdateReport = async (reportId: string) => {
   }
 }
 
-const handleLogoClick = async () => {
-  if (user.value?.id) {
-    const defaultReport = await getDefaultReport()
-    if (defaultReport && defaultReport.url_params) {
-      const url = router.resolve({ path: '/', query: Object.fromEntries(new URLSearchParams(defaultReport.url_params)) }).href
-      window.location.href = url
-      return
-    }
-  }
-  window.location.href = '/'
-}
-
 const loadReport = (report: any) => {
   if (report.url_params) {
-    // Build the new URL with saved parameters
-    const searchParams = new URLSearchParams(report.url_params)
+    // Parse the saved path to extract path and query params
+    const [path, queryString] = report.url_params.split('?')
+    const searchParams = new URLSearchParams(queryString || '')
     const query: Record<string, string> = {}
     
     for (const [key, value] of searchParams.entries()) {
@@ -552,10 +538,7 @@ const loadReport = (report: any) => {
     query['reportName'] = report.name
     
     // Create the new URL
-    const newUrl = router.resolve({ 
-      path: '/',
-      query 
-    }).href
+    const newUrl = window.location.origin + path + '?' + new URLSearchParams(query).toString()
     
     // Navigate to the new URL and reload the page
     window.location.href = newUrl
@@ -571,25 +554,26 @@ const loadReport = (report: any) => {
   showReports.value = false
 }
 
-const clearActiveReport = () => {
-  // Remove reportName from URL and reload
-  const url = new URL(window.location.href)
-  url.searchParams.delete('reportName')
-  window.location.href = url.toString()
+const handleLogoClick = async () => {
+  if (user.value?.id) {
+    const defaultReport = await getDefaultReport()
+    if (defaultReport && defaultReport.url_params) {
+      // Parse the saved full path
+      const url = window.location.origin + defaultReport.url_params
+      window.location.href = url
+      return
+    }
+  }
+  window.location.href = '/'
 }
 
 const copyReportUrl = async (report: any) => {
   try {
-    let url = window.location.origin + route.path
-    
-    if (report.url_params) {
-      url += '?' + report.url_params
-    }
+    // Use the full path stored in url_params
+    const url = window.location.origin + report.url_params
     
     await navigator.clipboard.writeText(url)
     
-    // Optional: Show a brief success indicator
-    // You could add a toast notification here if you have one
     alert('URL copied to clipboard!')
   } catch (error) {
     console.error('Failed to copy URL:', error)

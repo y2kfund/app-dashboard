@@ -19,12 +19,12 @@ const props = withDefaults(defineProps<Props>(), {
 
 <template>
   <div class="summary-app">
-    <header class="app-header">
+    <!--header class="app-header">
       <h1>Summary</h1>
       <nav class="breadcrumb">
         <router-link to="/">Dashboard</router-link> / Summary
       </nav>
-    </header>
+    </header-->
     <main class="app-content">
       <Summary :account-id="accountId" :userId="currentUserId" />
     </main>

@@ -23,12 +23,12 @@ function handleRowClick(row: any) {
 
 <template>
   <div class="positions-app">
-    <header class="app-header">
+    <!--header class="app-header">
       <h1>Positions</h1>
       <nav class="breadcrumb">
         <router-link to="/">Dashboard</router-link> / Positions
       </nav>
-    </header>
+    </header-->
     <main class="app-content">
       <Positions 
         :account-id="accountId"

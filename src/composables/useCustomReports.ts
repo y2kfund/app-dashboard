@@ -16,6 +16,13 @@ export function useCustomReports() {
   const reports = ref<CustomReport[]>([])
   const isLoading = ref(false)
 
+  // Helper function to get full path with query params
+  const getFullPath = () => {
+    const path = window.location.pathname
+    const search = window.location.search
+    return path + search
+  }
+
   // Load reports
   const loadReports = async () => {
     if (!user.value?.id) return
@@ -86,7 +93,7 @@ export function useCustomReports() {
   const saveReport = async (name: string) => {
     if (!user.value?.id || !name.trim()) return
     
-    const urlParams = new URLSearchParams(window.location.search).toString()
+    const fullPath = getFullPath()
     
     try {
       const { error } = await supabase
@@ -95,7 +102,7 @@ export function useCustomReports() {
         .insert([{
           user_id: user.value.id,
           name: name.trim(),
-          url_params: urlParams
+          url_params: fullPath
         }])
       
       if (error) throw error
@@ -106,17 +113,17 @@ export function useCustomReports() {
     }
   }
 
-  // Update report with current URL (simplified)
+  // Update report with current URL
   const updateReport = async (reportId: string) => {
     if (!user.value?.id) return
     
-    const urlParams = new URLSearchParams(window.location.search).toString()
+    const fullPath = getFullPath()
     
     try {
       const { error } = await supabase
         .schema('hf')
         .from('custom_reports')
-        .update({ url_params: urlParams })
+        .update({ url_params: fullPath })
         .eq('id', reportId)
         .eq('user_id', user.value.id)
       
