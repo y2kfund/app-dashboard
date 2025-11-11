@@ -45,18 +45,19 @@ export function useAuth() {
   async function signInWithOAuth(provider: 'google' | 'github') {
     const redirectTo = getRedirectUrl()
     const currentUrl = window.location.href
+    const currentOrigin = window.location.origin
     
     console.log('[OAuth] Starting login with provider:', provider)
     console.log('[OAuth] Redirect URL:', redirectTo)
     console.log('[OAuth] Current URL:', currentUrl)
-    console.log('[OAuth] Current origin:', window.location.origin)
+    console.log('[OAuth] Current origin:', currentOrigin)
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: redirectTo,
         queryParams: {
-          redirect_origin: currentUrl
+          redirect_origin: currentOrigin
         }
       }
     })
