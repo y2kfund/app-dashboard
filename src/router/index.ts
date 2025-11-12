@@ -7,6 +7,7 @@ const SummaryApp = () => import('../pages/SummaryApp.vue')
 const ThesisApp = () => import('../pages/ThesisApp.vue')
 const AuthCallback = () => import('../pages/AuthCallback.vue')
 const TasksApp = () => import('../pages/TasksApp.vue')
+const InstrumentDetails = () => import('../pages/InstrumentDetails.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -23,7 +24,13 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     // Catch-all fallback
-    { path: '/:pathMatch(.*)*', redirect: '/' }
+    { path: '/:pathMatch(.*)*', redirect: '/' },
+    { 
+      path: '/instrument-details/:symbolRoot', 
+      name: 'instrument-details', 
+      component: InstrumentDetails, 
+      props: true
+    },
   ]
 })
 
