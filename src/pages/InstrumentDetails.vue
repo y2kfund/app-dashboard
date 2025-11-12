@@ -4,9 +4,11 @@ import { useRoute } from 'vue-router'
 import { putPositions } from '@y2kfund/put-positions-for-single-instrument'
 import { callPositions } from '@y2kfund/call-positions-for-single-instrument'
 import { currentPositions } from '@y2kfund/current-positions-for-single-instrument'
+import { AiReccomendations } from '@y2kfund/ai-recommendations-for-single-instrument'
 import '@y2kfund/call-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/put-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/current-positions-for-single-instrument/dist/style.css'
+import '@y2kfund/ai-recommendations-for-single-instrument/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 
 const { user } = useAuth()
@@ -54,12 +56,11 @@ const symbolRoot = computed(() => (route.params.symbolRoot as string) || '')
 
         <!-- Right Section - AI Recommendations -->
         <aside class="ai-sidebar">
-          <div class="ai-recommendation-box">
-            <h2>AI Recommendation</h2>
-            <div class="ai-content">
-              <p>AI-powered recommendations will appear here.</p>
-            </div>
-          </div>
+          <AiReccomendations 
+            v-if="symbolRoot"
+            :symbol-root="symbolRoot"
+            :user-id="currentUserId"
+          />
         </aside>
       </div>
     </main>
@@ -111,32 +112,10 @@ const symbolRoot = computed(() => (route.params.symbolRoot as string) || '')
 }
 
 .ai-sidebar {
-  width: 450px;
+  min-width: 450px;
+  max-width: 35%;
   flex-shrink: 0;
   overflow-y: auto;
-}
-
-.ai-recommendation-box {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  position: sticky;
-  top: 0;
-}
-
-.ai-recommendation-box h2 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 1.25rem;
-  border-bottom: 2px solid #007bff;
-  padding-bottom: 0.5rem;
-}
-
-.ai-content {
-  color: #6c757d;
-  font-size: 0.875rem;
-  line-height: 1.6;
 }
 
 /* Responsive adjustments */
@@ -148,10 +127,6 @@ const symbolRoot = computed(() => (route.params.symbolRoot as string) || '')
   .ai-sidebar {
     width: 100%;
     order: -1;
-  }
-
-  .ai-recommendation-box {
-    position: static;
   }
 }
 </style>
