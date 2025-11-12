@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { putPositions } from '@y2kfund/put-positions-for-single-instrument'
 import { callPositions } from '@y2kfund/call-positions-for-single-instrument'
@@ -17,6 +17,14 @@ const route = useRoute()
 const currentUserId = computed(() => user.value?.id || undefined)
 const symbolRoot = computed(() => (route.params.symbolRoot as string) || '')
 
+// Update document title when symbolRoot changes
+watch(symbolRoot, (newSymbol) => {
+  if (newSymbol) {
+    document.title = `${newSymbol} - analysis of current positions | Y2K Fund`
+  } else {
+    document.title = 'Instrument analysis of current positions | Y2K Fund'
+  }
+}, { immediate: true })
 </script>
 
 <template>
