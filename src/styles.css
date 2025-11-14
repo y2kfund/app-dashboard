@@ -77,3 +77,7 @@ span.move-icons button {
 .tabulator-row:nth-child(2n) {
     background-color: #fff !important;
 }
+
+button.attach-trades-btn {
+    color: #000;
+}
