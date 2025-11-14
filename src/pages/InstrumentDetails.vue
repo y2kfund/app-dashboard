@@ -36,17 +36,18 @@ watch(symbolRoot, (newSymbol) => {
         <!-- Left Section - Positions -->
         <div class="instrument-details-container">
 
+          <!-- Current Positions Section -->
           <section class="positions-section">
-            <InstrumentInsight 
+            <currentPositions 
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
               :user-id="currentUserId"
             />
           </section>
 
-          <!-- Current Positions Section -->
+          <!-- Instrument Insight Section -->
           <section class="positions-section">
-            <currentPositions 
+            <InstrumentInsight 
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
               :user-id="currentUserId"
