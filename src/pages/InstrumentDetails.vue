@@ -5,10 +5,12 @@ import { putPositions } from '@y2kfund/put-positions-for-single-instrument'
 import { callPositions } from '@y2kfund/call-positions-for-single-instrument'
 import { currentPositions } from '@y2kfund/current-positions-for-single-instrument'
 import { AiReccomendations } from '@y2kfund/ai-recommendations-for-single-instrument'
+import { InstrumentInsight } from '@y2kfund/instrument-insights'
 import '@y2kfund/call-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/put-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/current-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/ai-recommendations-for-single-instrument/dist/style.css'
+import '@y2kfund/instrument-insights/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 
 const { user } = useAuth()
@@ -33,6 +35,14 @@ watch(symbolRoot, (newSymbol) => {
       <div class="content-layout">
         <!-- Left Section - Positions -->
         <div class="instrument-details-container">
+
+          <section class="positions-section">
+            <InstrumentInsight 
+              v-if="symbolRoot"
+              :symbol-root="symbolRoot"
+              :user-id="currentUserId"
+            />
+          </section>
 
           <!-- Current Positions Section -->
           <section class="positions-section">
