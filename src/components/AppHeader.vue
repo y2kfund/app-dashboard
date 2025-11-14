@@ -358,7 +358,12 @@
             <div class="dropdown-divider"></div>
             
             <div class="dropdown-section">
-              <span class="dropdown-section-title">Settings</span>
+              <button @click="openActivityLog" class="dropdown-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Activity Log
+              </button>
             </div>
             
             <div class="dropdown-divider"></div>
@@ -387,6 +392,33 @@
       @error="handleAnalyzeChatError"
     />
 
+    <!-- Activity Log Drawer -->
+    <Transition name="drawer-backdrop">
+      <div v-if="showActivityLog" class="drawer-backdrop" @click="closeActivityLog"></div>
+    </Transition>
+
+    <Transition name="drawer">
+      <div v-if="showActivityLog" class="activity-drawer">
+        <div class="drawer-header">
+          <div class="drawer-title-section">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h3>Activity Log</h3>
+          </div>
+          <button @click="closeActivityLog" class="close-drawer-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="drawer-content">
+          <ActivityLog />
+        </div>
+      </div>
+    </Transition>
   </header>
 </template>
 
@@ -404,6 +436,8 @@ import type { AnalyzeTimelineConfig } from '@y2kfund/analyze-timeline/dist/types
 import '@y2kfund/analyze-timeline/dist/style.css'
 import { useCustomReports } from '../composables/useCustomReports'
 import { eventBus } from '../utils/eventBus'
+import { ActivityLog } from '@y2kfund/activity-log'
+import '@y2kfund/activity-log/dist/style.css'
 
 const router = useRouter()
 const route = useRoute()
@@ -441,6 +475,18 @@ const timelineConfig = computed<AnalyzeTimelineConfig>(() => ({
   userId: user.value?.id || '',
   enableDatabase: true
 }))
+
+const showActivityLog = ref(false)
+
+// Activity Log functions
+const openActivityLog = () => {
+  showActivityLog.value = true
+  closeDropdown()
+}
+
+const closeActivityLog = () => {
+  showActivityLog.value = false
+}
 
 const setDefaultReportHandler = async (reportId: string) => {
   try {
@@ -1814,5 +1860,149 @@ span.active-report-name {
   color: #7c3aed;
   border-bottom-color: #7c3aed;
   border-bottom-style: solid;
+}
+
+/* Activity Drawer Styles */
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  backdrop-filter: blur(4px);
+}
+
+.drawer-backdrop-enter-active,
+.drawer-backdrop-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.drawer-backdrop-enter-from,
+.drawer-backdrop-leave-to {
+  opacity: 0;
+}
+
+.activity-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 450px;
+  max-width: 90vw;
+  height: 100vh;
+  background: white;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-enter-from,
+.drawer-leave-to {
+  transform: translateX(-100%);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  flex-shrink: 0;
+}
+
+.drawer-title-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.drawer-title-section svg {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.drawer-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.close-drawer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.close-drawer-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+  transform: scale(1.05);
+}
+
+.close-drawer-btn:active {
+  transform: scale(0.95);
+}
+
+.drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  background: #ffffff;
+  height: 100%;
+}
+
+/* Custom scrollbar for drawer */
+.drawer-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.drawer-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.drawer-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.drawer-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@media (max-width: 640px) {
+  .activity-drawer {
+    width: 100vw;
+    max-width: 100vw;
+  }
+  
+  .drawer-header {
+    padding: 1rem;
+  }
+  
+  .drawer-header h3 {
+    font-size: 1.125rem;
+  }
 }
 </style>
