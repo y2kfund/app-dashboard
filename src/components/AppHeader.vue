@@ -154,6 +154,21 @@
             </button>
 
             <div class="divider"></div>
+            
+            <button 
+              @click="refreshData('current-delta')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              Current Delta
+            </button>
+
+            <div class="divider"></div>
 
             <button 
               @click="refreshAllData" 
@@ -655,7 +670,7 @@ const toggleRefresh = () => {
   }
 }
 
-const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers') => {
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers' | 'current-delta') => {
   const labels = {
     'positions': 'Positions',
     'maintenance-margin': 'Maintenance Margin',
@@ -664,7 +679,8 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' 
     'trades': 'Trades',
     'current-margin-impact': 'Current Margin Impact',
     'cash-transactions': 'Cash Transactions',
-    'transfers': 'Transfers'
+    'transfers': 'Transfers',
+    'current-delta': 'Current Delta'
   }
 
   const statusId = `refresh-${endpoint}-${Date.now()}`
@@ -727,7 +743,7 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' 
 }
 
 const refreshAllData = async () => {
-  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'transfers' | 'cash-transactions' | 'current-margin-impact'> = [
+  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'transfers' | 'cash-transactions' | 'current-margin-impact' | 'current-delta'> = [
     'positions', 
     'maintenance-margin', 
     'nlv',
@@ -735,7 +751,8 @@ const refreshAllData = async () => {
     'trades',
     'transfers',
     'cash-transactions',
-    'current-margin-impact'
+    'current-margin-impact',
+    'current-delta'
   ]
 
   isRefreshing.value = true
