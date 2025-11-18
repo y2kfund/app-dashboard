@@ -428,7 +428,7 @@
         </div>
         
         <div class="drawer-content">
-          <ActivityLog />
+          <ActivityLog :user-id="user?.id" />
         </div>
       </div>
     </Transition>
