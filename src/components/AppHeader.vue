@@ -153,8 +153,6 @@
               Transfers
             </button>
 
-            <div class="divider"></div>
-            
             <button 
               @click="refreshData('current-delta')" 
               :disabled="isRefreshing"
