@@ -391,6 +391,15 @@
                 Activity Log
               </button>
             </div>
+
+            <div class="dropdown-section">
+              <button @click="openRiskManagement" class="dropdown-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3h18v4H3zM3 10h18v4H3zM3 17h18v4H3z"/>
+                </svg>
+                Risk Management
+              </button>
+            </div>
             
             <div class="dropdown-divider"></div>
             
@@ -512,6 +521,11 @@ const openActivityLog = () => {
 
 const closeActivityLog = () => {
   showActivityLog.value = false
+}
+
+const openRiskManagement = () => {
+  router.push({ name: 'risk-management' })
+  closeDropdown()
 }
 
 const setDefaultReportHandler = async (reportId: string) => {
