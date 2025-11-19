@@ -1956,7 +1956,7 @@ span.active-report-name {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem;
+  padding: 0.5rem 1.5rem;
   border-bottom: 1px solid #e2e8f0;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   flex-shrink: 0;
@@ -2041,7 +2041,7 @@ span.active-report-name {
   }
   
   .drawer-header {
-    padding: 1rem;
+    padding: 0.5rem 1rem;
   }
   
   .drawer-header h3 {
