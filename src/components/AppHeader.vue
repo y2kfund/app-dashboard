@@ -166,6 +166,19 @@
               Current Delta
             </button>
 
+            <button 
+              @click="refreshData('financial-data')" 
+              :disabled="isRefreshing"
+              class="refresh-option"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              Financial Data
+            </button>
+
             <div class="divider"></div>
 
             <button 
@@ -668,7 +681,7 @@ const toggleRefresh = () => {
   }
 }
 
-const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers' | 'current-delta') => {
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers' | 'current-delta' | 'financial-data') => {
   const labels = {
     'positions': 'Positions',
     'maintenance-margin': 'Maintenance Margin',
@@ -678,7 +691,8 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' 
     'current-margin-impact': 'Current Margin Impact',
     'cash-transactions': 'Cash Transactions',
     'transfers': 'Transfers',
-    'current-delta': 'Current Delta'
+    'current-delta': 'Current Delta',
+    'financial-data': 'Financial Data'
   }
 
   const statusId = `refresh-${endpoint}-${Date.now()}`
