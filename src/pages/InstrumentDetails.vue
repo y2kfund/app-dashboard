@@ -6,11 +6,13 @@ import { callPositions } from '@y2kfund/call-positions-for-single-instrument'
 import { currentPositions } from '@y2kfund/current-positions-for-single-instrument'
 import { AiReccomendations } from '@y2kfund/ai-recommendations-for-single-instrument'
 import { InstrumentInsight } from '@y2kfund/instrument-insights'
+import { Trades } from '@y2kfund/all-trades-for-single-instruments'
 import '@y2kfund/call-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/put-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/current-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/ai-recommendations-for-single-instrument/dist/style.css'
 import '@y2kfund/instrument-insights/dist/style.css'
+import '@y2kfund/all-trades-for-single-instruments/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 
 const { user } = useAuth()
@@ -67,6 +69,15 @@ watch(symbolRoot, (newSymbol) => {
           <section class="positions-section">
             <callPositions 
               v-if="symbolRoot"
+              :symbol-root="symbolRoot"
+              :user-id="currentUserId"
+            />
+          </section>
+
+           <section class="positions-section">
+            <Trades 
+              v-if="symbolRoot" 
+              account-id="demo"
               :symbol-root="symbolRoot"
               :user-id="currentUserId"
             />
