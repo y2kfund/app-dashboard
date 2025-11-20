@@ -7,12 +7,14 @@ import { currentPositions } from '@y2kfund/current-positions-for-single-instrume
 import { AiReccomendations } from '@y2kfund/ai-recommendations-for-single-instrument'
 import { InstrumentInsight } from '@y2kfund/instrument-insights'
 import { Trades } from '@y2kfund/all-trades-for-single-instruments'
+import { TasksForSingleInstrument } from '@y2kfund/tasks-for-single-instruments'
 import '@y2kfund/call-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/put-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/current-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/ai-recommendations-for-single-instrument/dist/style.css'
 import '@y2kfund/instrument-insights/dist/style.css'
 import '@y2kfund/all-trades-for-single-instruments/dist/style.css'
+import '@y2kfund/tasks-for-single-instruments/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 
 const { user } = useAuth()
@@ -50,6 +52,14 @@ watch(symbolRoot, (newSymbol) => {
           <!-- Instrument Insight Section -->
           <section class="positions-section">
             <InstrumentInsight 
+              v-if="symbolRoot"
+              :symbol-root="symbolRoot"
+              :user-id="currentUserId"
+            />
+          </section>
+
+          <section class="positions-section">
+            <TasksForSingleInstrument 
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
               :user-id="currentUserId"
