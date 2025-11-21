@@ -2,18 +2,21 @@
 import { ref, watch } from 'vue'
 import { relativeCapitalDeployed } from '@y2kfund/relative-capital-deployed-risk-management'
 import '@y2kfund/relative-capital-deployed-risk-management/dist/style.css'
+import { capitalAcrossThesis } from '@y2kfund/capital-across-thesis-risk-management'
+import '@y2kfund/capital-across-thesis-risk-management/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 
 const { user } = useAuth()
 
 // Active tab state
-type TabType = 'capital-deployed' | 'pe-ratio'
+type TabType = 'capital-deployed' | 'capital-across-thesis' | 'pe-ratio'
 const activeTab = ref<TabType>('capital-deployed')
 
 // Update document title
 watch(activeTab, (newTab) => {
   const titles: Record<TabType, string> = {
     'capital-deployed': 'Capital Deployed Across Assets - Risk Management | Y2K Fund',
+    'capital-across-thesis': 'Capital Across Thesis - Risk Management | Y2K Fund',
     'pe-ratio': 'P/E Ratio of Companies - Risk Management | Y2K Fund'
   }
   document.title = titles[newTab]
@@ -51,6 +54,22 @@ function switchTab(tab: TabType) {
             
             <button 
               class="tab-button" 
+              :class="{ active: activeTab === 'capital-across-thesis' }"
+              @click="switchTab('capital-across-thesis')"
+            >
+              <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
+                <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
+                <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+              <span>Capital Across Thesis</span>
+            </button>
+            
+            <button 
+              class="tab-button" 
               :class="{ active: activeTab === 'pe-ratio' }"
               @click="switchTab('pe-ratio')"
             >
@@ -69,6 +88,13 @@ function switchTab(tab: TabType) {
           <!-- Capital Deployed Tab -->
           <section v-if="activeTab === 'capital-deployed'" class="content-section">
             <relativeCapitalDeployed 
+              :user-id="user?.id || null"
+            />
+          </section>
+
+          <!-- Capital Across Thesis Tab -->
+          <section v-else-if="activeTab === 'capital-across-thesis'" class="content-section">
+            <capitalAcrossThesis 
               :user-id="user?.id || null"
             />
           </section>
