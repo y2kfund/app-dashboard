@@ -16,7 +16,7 @@ import { createClient } from '@supabase/supabase-js'
  * Body: { "userId": "uuid", "symbolRoot": "META" }
  */
 
-export async function onRequest(context) {
+export const onRequest = async (context) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -280,4 +280,4 @@ Please analyze the positions shown in the screenshot and provide your daily asse
   }
 }
 
-export const onRequestPost = onRequest
+export default onRequest

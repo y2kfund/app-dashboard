@@ -1,2 +1,6 @@
-[[browser]]
+name = "cron-ai-analysis"
+main = "functions/api/cron-ai-analysis.js"
+compatibility_date = "2025-11-24"
+
+[browser]
 binding = "MYBROWSER"
