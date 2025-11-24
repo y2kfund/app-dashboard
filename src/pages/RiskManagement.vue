@@ -4,6 +4,8 @@ import { relativeCapitalDeployed } from '@y2kfund/relative-capital-deployed-risk
 import '@y2kfund/relative-capital-deployed-risk-management/dist/style.css'
 import { capitalAcrossThesis } from '@y2kfund/capital-across-thesis-risk-management'
 import '@y2kfund/capital-across-thesis-risk-management/dist/style.css'
+import { peRatioAnalysis } from '@y2kfund/pe-ratio-analysis-risk-management'
+import '@y2kfund/pe-ratio-analysis-risk-management/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 
 const { user } = useAuth()
@@ -99,13 +101,11 @@ function switchTab(tab: TabType) {
             />
           </section>
 
-          <!-- P/E Ratio Tab (Placeholder) -->
+          <!-- P/E Ratio Tab -->
           <section v-else-if="activeTab === 'pe-ratio'" class="content-section">
-            <div class="placeholder-content">
-              <div class="placeholder-icon">📊</div>
-              <h3>P/E Ratio Analysis</h3>
-              <p>This feature is coming soon. It will display P/E ratio analysis across companies in your portfolio.</p>
-            </div>
+            <peRatioAnalysis 
+              :user-id="user?.id || null"
+            />
           </section>
         </div>
       </div>
