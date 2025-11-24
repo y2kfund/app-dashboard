@@ -167,9 +167,11 @@ async function captureScreenshot(context, userId, symbolRoot) {
     const screenshotApiUrl = `https://api.screenshot.one/take?access_key=${context.env.SCREENSHOT_ONE_API_KEY}&url=${encodeURIComponent(pageUrl)}&format=jpeg&quality=85&selector=.instrument-details-container&full_page=false&device_scale_factor=2`
     
     const response = await fetch(screenshotApiUrl)
-    
+    console.log('[Cron] Screenshot.one response status:', response.status)
     if (!response.ok) {
-      throw new Error(`Screenshot API failed: ${response.statusText}`)
+      const errorText = await response.text()
+      console.error('[Cron] Screenshot.one error:', errorText)
+      throw new Error(`Screenshot API failed: ${response.statusText} - ${errorText}`)
     }
     
     const screenshotBuffer = await response.arrayBuffer()
