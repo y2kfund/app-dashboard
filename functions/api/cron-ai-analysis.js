@@ -130,16 +130,18 @@ async function captureScreenshot(context, userId, symbolRoot) {
       
       const browser = await context.env.MYBROWSER.launch()
       const page = await browser.newPage()
-      
-      // Navigate to the page
-      await page.goto(pageUrl, { 
-        waitUntil: 'networkidle',
-        timeout: 30000 
-      })
-      
-      // Wait for the specific element
-      await page.waitForSelector('.instrument-details-container', { timeout: 10000 })
-      
+
+      // Step 1: Go to login page
+      await page.goto(`${context.env.VITE_APP_URL}/login`)
+      await page.type('#email', context.env.LOGIN_USERNAME)
+      await page.type('#password', context.env.LOGIN_PASSWORD)
+      await page.click('.primary-button')
+      await page.waitForNavigation()
+
+      // Step 2: Go to instrument details page
+      await page.goto(`${context.env.VITE_APP_URL}/instrument-details/${symbolRoot}`, { waitUntil: 'networkidle' })
+      await page.waitForSelector('.instrument-details-container')
+
       // Additional wait to ensure all data is loaded
       await page.waitForTimeout(2000)
       
