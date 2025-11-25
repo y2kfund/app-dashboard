@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { putPositions } from '@y2kfund/put-positions-for-single-instrument'
 import { callPositions } from '@y2kfund/call-positions-for-single-instrument'
@@ -22,6 +22,7 @@ const route = useRoute()
 
 const currentUserId = computed(() => user.value?.id || undefined)
 const symbolRoot = computed(() => (route.params.symbolRoot as string) || '')
+const showAISidebar = ref(false)
 
 // Update document title when symbolRoot changes
 watch(symbolRoot, (newSymbol) => {
@@ -38,7 +39,10 @@ watch(symbolRoot, (newSymbol) => {
     <main class="app-content">
       <div class="content-layout">
         <!-- Left Section - Positions -->
-        <div class="instrument-details-container">
+        <div 
+          class="instrument-details-container"
+          :class="{ 'full-width': !showAISidebar }"
+        >
 
           <!-- Current Positions Section -->
           <section class="positions-section">
@@ -95,7 +99,10 @@ watch(symbolRoot, (newSymbol) => {
         </div>
 
         <!-- Right Section - AI Recommendations -->
-        <aside class="ai-sidebar">
+        <aside 
+          v-if="showAISidebar"
+          class="ai-sidebar"
+        >
           <AiReccomendations 
             v-if="symbolRoot"
             :symbol-root="symbolRoot"
@@ -103,6 +110,15 @@ watch(symbolRoot, (newSymbol) => {
           />
         </aside>
       </div>
+      <!-- Floating Chat Icon -->
+      <button 
+        class="chat-float-btn"
+        @click="showAISidebar = !showAISidebar"
+        aria-label="Toggle AI Recommendations"
+      >
+        <span v-if="showAISidebar" style="color: #fff;">X</span>
+        <span v-else>💬</span>
+      </button>
     </main>
   </div>
 </template>
@@ -144,6 +160,11 @@ watch(symbolRoot, (newSymbol) => {
   gap: 0.25rem;
 }
 
+.instrument-details-container.full-width {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
 .positions-section {
   background: white;
   border-radius: 8px;
@@ -156,6 +177,30 @@ watch(symbolRoot, (newSymbol) => {
   max-width: 35%;
   flex-shrink: 0;
   overflow-y: auto;
+  transition: all 0.3s;
+}
+
+.chat-float-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  background: #2c3e50;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.chat-float-btn:hover {
+  background: #34495e;
 }
 
 /* Responsive adjustments */
@@ -163,10 +208,12 @@ watch(symbolRoot, (newSymbol) => {
   .content-layout {
     flex-direction: column;
   }
-
   .ai-sidebar {
     width: 100%;
     order: -1;
+  }
+  .instrument-details-container.full-width {
+    max-width: 100%;
   }
 }
 </style>

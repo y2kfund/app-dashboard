@@ -100,7 +100,8 @@ span.expand-arrow {
 .ai-recommendation-box {
     padding: 0.5rem !important;
 }
-.summary-cards {
+.summary-cards,
+.boxes-container {
     gap: 0.5rem !important;
 }
 .positions-header {
