@@ -115,3 +115,6 @@ button.tab-button,
     padding: 0 0 4px 0 !important;
     font-size: 0.8rem;
 }
+.summary-label {
+    margin-bottom: 0.25rem !important;
+}

@@ -24,12 +24,27 @@ const currentUserId = computed(() => user.value?.id || undefined)
 const symbolRoot = computed(() => (route.params.symbolRoot as string) || '')
 const showAISidebar = ref(false)
 
+const totalCapitalUsed = ref(null)
+function handleCapitalUsedChanged(val) {
+  totalCapitalUsed.value = val
+  console.log('Total Capital Used updated in InstrumentDetails:', val)
+}
+
 // Update document title when symbolRoot changes
-watch(symbolRoot, (newSymbol) => {
+/*watch(symbolRoot, (newSymbol) => {
   if (newSymbol) {
     document.title = `${newSymbol} - analysis of current positions | Y2K Fund`
   } else {
     document.title = 'Instrument analysis of current positions | Y2K Fund'
+  }
+}, { immediate: true })*/
+
+watch([symbolRoot, totalCapitalUsed], ([newSymbol, capital]) => {
+  const capitalText = capital !== null ? `Capital Used: $${totalCapitalUsed.value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : ''
+  if (newSymbol) {
+    document.title = `${newSymbol} - ${capitalText} | Y2K Fund`
+  } else {
+    document.title = `${capitalText} | Y2K Fund`
   }
 }, { immediate: true })
 </script>
@@ -50,6 +65,7 @@ watch(symbolRoot, (newSymbol) => {
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
               :user-id="currentUserId"
+              @capitalUsedChanged="handleCapitalUsedChanged"
             />
           </section>
 
