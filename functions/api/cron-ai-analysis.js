@@ -16,7 +16,7 @@ import { createClient } from '@supabase/supabase-js'
  * Body: { "userId": "uuid", "symbolRoot": "META" }
  */
 
-export const onRequest = async (context) => {
+/*export const onRequest = async (context) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -114,57 +114,147 @@ export const onRequest = async (context) => {
       details: error instanceof Error ? error.stack : undefined
     }), { status: 500, headers: corsHeaders })
   }
+  //return new Response('Hello from Worker!', { status: 200 })
+}*/
+
+export default {
+  async fetch(request, env, ctx) {
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Content-Type': 'application/json'
+    }
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders })
+    }
+
+    if (request.method !== 'POST') {
+      return new Response(JSON.stringify({
+        error: 'Method not allowed',
+        message: 'This endpoint only accepts POST requests'
+      }), { status: 405, headers: corsHeaders })
+    }
+
+    try {
+      const { userId, symbolRoot } = await request.json()
+
+      if (!userId || !symbolRoot) {
+        return new Response(JSON.stringify({
+          error: 'Missing parameters',
+          message: 'userId and symbolRoot are required'
+        }), { status: 400, headers: corsHeaders })
+      }
+
+      console.log(`[Cron] Starting automated AI analysis for ${symbolRoot} (user: ${userId})`)
+
+      // Initialize Supabase with service role key (bypasses RLS)
+      const supabase = createClient(
+        env.VITE_SUPA_URL,
+        env.VITE_SUPA_SERVICE_KEY || env.VITE_SUPA_ANON
+      )
+
+      // Step 1: Capture screenshot
+      const screenshot = await captureScreenshot(env, userId, symbolRoot)
+
+      if (!screenshot) {
+        throw new Error('Failed to capture screenshot')
+      }
+
+      console.log(`[Cron] Screenshot captured successfully`)
+
+      // Step 2: Get AI analysis
+      const aiResponse = await getAiAnalysis(env, screenshot, symbolRoot)
+
+      console.log(`[Cron] AI analysis received`)
+
+      // Step 3: Save to existing ai_recommendations_conversations table
+      const pageUrl = `${env.VITE_APP_URL || 'https://www.y2k.fund'}/instrument-details/${symbolRoot}`
+      
+      const { data: savedConversation, error: saveError } = await supabase
+        .from('ai_recommendations_conversations')
+        .insert({
+          user_id: userId,
+          symbol_root: symbolRoot,
+          question: `🤖 Automated daily analysis for ${symbolRoot}`,
+          screenshot: screenshot,
+          ai_response: aiResponse.response,
+          model: aiResponse.model,
+          page_url: pageUrl,
+          metadata: {
+            timestamp: aiResponse.timestamp,
+            automated: true,
+            cron_trigger: true,
+            analysis_type: 'daily_automated'
+          }
+        })
+        .select()
+        .single()
+
+      if (saveError) {
+        console.error('[Cron] Database save error:', saveError)
+        throw saveError
+      }
+
+      console.log(`[Cron] Analysis saved to database: ${savedConversation.id}`)
+
+      return new Response(JSON.stringify({
+        success: true,
+        conversation_id: savedConversation.id,
+        symbol_root: symbolRoot,
+        user_id: userId,
+        timestamp: new Date().toISOString(),
+        message: `Automated analysis completed for ${symbolRoot}`
+      }), { status: 200, headers: corsHeaders })
+
+    } catch (error) {
+      console.error('[Cron] Error:', error)
+      return new Response(JSON.stringify({
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        details: error instanceof Error ? error.stack : undefined
+      }), { status: 500, headers: corsHeaders })
+    }
+  }
 }
 
 /**
  * Capture screenshot using Cloudflare Browser Rendering
  * Falls back to external screenshot service if not available
  */
-async function captureScreenshot(context, userId, symbolRoot) {
+async function captureScreenshot(env, userId, symbolRoot) {
   try {
-    const pageUrl = `${context.env.VITE_APP_URL || 'https://www.y2k.fund'}/instrument/${symbolRoot}`
+    const pageUrl = `${env.VITE_APP_URL || 'https://www.y2k.fund'}/instrument-details/${symbolRoot}`
 
-    // Option 1: Cloudflare Browser Rendering (if available)
-    if (context.env.MYBROWSER) {
+    if (env.MYBROWSER) {
       console.log('[Cron] Using Cloudflare Browser Rendering')
-      
-      const browser = await context.env.MYBROWSER.launch()
-      const page = await browser.newPage()
 
-      // Step 1: Go to login page
-      await page.goto(`${context.env.VITE_APP_URL}/login`)
-      await page.type('#email', context.env.LOGIN_USERNAME)
-      await page.type('#password', context.env.LOGIN_PASSWORD)
-      await page.click('.primary-button')
-      await page.waitForNavigation()
-
-      // Step 2: Go to instrument details page
-      await page.goto(`${context.env.VITE_APP_URL}/instrument-details/${symbolRoot}`, { waitUntil: 'networkidle' })
-      await page.waitForSelector('.instrument-details-container')
-
-      // Additional wait to ensure all data is loaded
-      await page.waitForTimeout(2000)
-      
-      // Take screenshot of the container
-      const element = await page.$('.instrument-details-container')
-      const screenshotBuffer = await element.screenshot({ 
-        type: 'jpeg',
-        quality: 85,
-        encoding: 'binary'
+      // Use the render() API
+      const result = await env.MYBROWSER.render({
+        url: pageUrl,
+        screenshot: {
+          type: 'jpeg',
+          quality: 85,
+          selector: '.instrument-details-container'
+        },
+        // Optionally, you can inject cookies or headers if needed for authentication
       })
-      
-      await browser.close()
-      
-      // Convert to base64
-      const base64Screenshot = `data:image/jpeg;base64,${Buffer.from(screenshotBuffer).toString('base64')}`
-      
+
+      if (!result.screenshot) {
+        throw new Error('Failed to capture screenshot with Browser Rendering')
+      }
+
+      // result.screenshot is a Uint8Array
+      const base64Screenshot = `data:image/jpeg;base64,${Buffer.from(result.screenshot).toString('base64')}`
+
       return base64Screenshot
     }
 
     // Option 2: Use screenshot.one API (fallback)
     console.log('[Cron] Using Screenshot.one API (fallback)')
     
-    const screenshotApiUrl = `https://api.screenshot.one/take?access_key=${context.env.SCREENSHOT_ONE_API_KEY}&url=${encodeURIComponent(pageUrl)}&format=jpeg&quality=85&selector=.instrument-details-container&full_page=false&device_scale_factor=2`
+    const screenshotApiUrl = `https://api.screenshot.one/take?access_key=${env.SCREENSHOT_ONE_API_KEY}&url=${encodeURIComponent(pageUrl)}&format=jpeg&quality=85&selector=.instrument-details-container&full_page=false&device_scale_factor=2`
     
     const response = await fetch(screenshotApiUrl)
     console.log('[Cron] Screenshot.one response status:', response.status)
@@ -188,8 +278,8 @@ async function captureScreenshot(context, userId, symbolRoot) {
 /**
  * Send screenshot to AI for automated analysis
  */
-async function getAiAnalysis(context, screenshot, symbolRoot) {
-  const apiKey = context.env.OPENROUTER_API_KEY
+async function getAiAnalysis(env, screenshot, symbolRoot) {
+  const apiKey = env.OPENROUTER_API_KEY
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY not configured')
   }
@@ -250,7 +340,7 @@ Please analyze the positions shown in the screenshot and provide your daily asse
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': context.env.VITE_APP_URL || 'https://www.y2k.fund',
+      'HTTP-Referer': env.VITE_APP_URL || 'https://www.y2k.fund',
       'X-Title': 'Y2K Fund - Automated Daily Analysis'
     },
     body: JSON.stringify({
@@ -280,4 +370,4 @@ Please analyze the positions shown in the screenshot and provide your daily asse
   }
 }
 
-export default onRequest
+//export default onRequest

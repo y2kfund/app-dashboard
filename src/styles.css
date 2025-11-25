@@ -84,3 +84,33 @@ button.attach-trades-btn {
 span.expand-arrow {
     min-width: 10px;
 }
+
+.header-section h2,
+.positions-header h2 {
+    font-size: 1.1rem !important;
+}
+.summary-section {
+    margin-top: 0.5rem !important;
+}
+.summary-cards .summary-card,
+.key-factors-box,
+.key-plans-box,
+.tasks-box,
+.positions-info,
+.ai-recommendation-box {
+    padding: 0.5rem !important;
+}
+.summary-cards {
+    gap: 0.5rem !important;
+}
+.positions-header {
+    margin-bottom: 0 !important;
+}
+button.tab-button,
+.tabs .tab {
+    padding: 2px 0 !important;
+}
+.tabulator .tabulator-tableholder .tabulator-placeholder .tabulator-placeholder-contents {
+    padding: 0 0 4px 0 !important;
+    font-size: 0.8rem;
+}

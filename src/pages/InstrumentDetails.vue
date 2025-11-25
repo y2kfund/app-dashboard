@@ -112,7 +112,7 @@ watch(symbolRoot, (newSymbol) => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 .app-header {
@@ -132,7 +132,7 @@ watch(symbolRoot, (newSymbol) => {
 
 .content-layout {
   display: flex;
-  gap: 1.5rem;
+  gap: 0.25rem;
   height: 100%;
 }
 
@@ -141,14 +141,14 @@ watch(symbolRoot, (newSymbol) => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.25rem;
 }
 
 .positions-section {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
+  padding: 0.25rem;
 }
 
 .ai-sidebar {
