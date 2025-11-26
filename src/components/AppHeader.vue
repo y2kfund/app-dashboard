@@ -58,139 +58,253 @@
 
           <div class="refresh-options">
             <button 
-              @click="refreshData('nlv')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
+              @click="refreshSelectedData" 
+              :disabled="isRefreshing || selectedEndpoints.size === 0"
+              class="refresh-option refresh-selected"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                <path d="M23 4v6h-6"/>
+                <path d="M1 20v-6h6"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
               </svg>
-              Net Liquidation Value
+              Refresh Selected ({{ selectedEndpoints.size }})
             </button>
 
-            <button 
-              @click="refreshData('maintenance-margin')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-              Maintenance Margin
-            </button>
+            <div class="divider"></div>
 
-            <button 
-              @click="refreshData('positions')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <path d="M9 9h6v6H9z"/>
-              </svg>
-              Positions
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('nlv')"
+                @change="toggleEndpointSelection('nlv')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('nlv')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+                Net Liquidation Value
+              </button>
+            </div>
 
-            <button 
-              @click="refreshData('current-market-price')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="1" x2="12" y2="23"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-              Current Market Prices
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('maintenance-margin')"
+                @change="toggleEndpointSelection('maintenance-margin')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('maintenance-margin')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Maintenance Margin
+              </button>
+            </div>
 
-            <button 
-              @click="refreshData('current-margin-impact')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-              Current Margin Impact
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('positions')"
+                @change="toggleEndpointSelection('positions')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('positions')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <path d="M9 9h6v6H9z"/>
+                </svg>
+                Positions
+              </button>
+            </div>
 
-            <button 
-              @click="refreshData('trades')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3.043V11m0 22v6m17 .043v6m0-30V23M3.077 15.38c.062-2.351 1.627-4.29 3.978-4.365a30 30 0 0 1 1.89 0c2.351.075 3.916 2.014 3.978 4.365c.042 1.636.077 3.823.077 6.62s-.035 4.984-.077 6.62c-.062 2.351-1.627 4.29-3.978 4.365a30 30 0 0 1-1.89 0c-2.351-.075-3.916-2.014-3.978-4.365C3.035 26.984 3 24.797 3 22s.035-4.984.077-6.62m16.961 12.128c.06-2.489 1.82-4.464 4.309-4.503a43 43 0 0 1 1.306 0c2.489.04 4.25 2.014 4.309 4.503c.023.975.038 2.135.038 3.492s-.015 2.517-.038 3.493c-.06 2.488-1.82 4.463-4.309 4.502a43 43 0 0 1-1.306 0c-2.489-.04-4.25-2.014-4.309-4.502C20.015 33.517 20 32.356 20 31s.015-2.517.038-3.492M45 7.607S43 6 40 6c-2.5 0-5 1.607-5 3.75c0 5.357 10 2.143 10 7.5c0 2.143-2.5 3.75-5 3.75c-3 0-5-1.607-5-1.607M40 6V3m0 21v-3"/></svg>
-              Trades
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('current-market-price')"
+                @change="toggleEndpointSelection('current-market-price')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('current-market-price')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                Current Market Prices
+              </button>
+            </div>
 
-            <button 
-              @click="refreshData('cash-transactions')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-              Cash Transactions
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('current-margin-impact')"
+                @change="toggleEndpointSelection('current-margin-impact')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('current-margin-impact')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Current Margin Impact
+              </button>
+            </div>
 
-            <button 
-              @click="refreshData('transfers')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-              Transfers
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('trades')"
+                @change="toggleEndpointSelection('trades')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('trades')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3.043V11m0 22v6m17 .043v6m0-30V23M3.077 15.38c.062-2.351 1.627-4.29 3.978-4.365a30 30 0 0 1 1.89 0c2.351.075 3.916 2.014 3.978 4.365c.042 1.636.077 3.823.077 6.62s-.035 4.984-.077 6.62c-.062 2.351-1.627 4.29-3.978 4.365a30 30 0 0 1-1.89 0c-2.351-.075-3.916-2.014-3.978-4.365C3.035 26.984 3 24.797 3 22s.035-4.984.077-6.62m16.961 12.128c.06-2.489 1.82-4.464 4.309-4.503a43 43 0 0 1 1.306 0c2.489.04 4.25 2.014 4.309 4.503c.023.975.038 2.135.038 3.492s-.015 2.517-.038 3.493c-.06 2.488-1.82 4.463-4.309 4.502a43 43 0 0 1-1.306 0c-2.489-.04-4.25-2.014-4.309-4.502C20.015 33.517 20 32.356 20 31s.015-2.517.038-3.492M45 7.607S43 6 40 6c-2.5 0-5 1.607-5 3.75c0 5.357 10 2.143 10 7.5c0 2.143-2.5 3.75-5 3.75c-3 0-5-1.607-5-1.607M40 6V3m0 21v-3"/></svg>
+                Trades
+              </button>
+            </div>
 
-            <button 
-              @click="refreshData('current-delta')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-              Current Delta
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('cash-transactions')"
+                @change="toggleEndpointSelection('cash-transactions')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('cash-transactions')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Cash Transactions
+              </button>
+            </div>
 
-            <button 
-              @click="refreshData('financial-data')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-              Financial Data
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('transfers')"
+                @change="toggleEndpointSelection('transfers')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('transfers')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Transfers
+              </button>
+            </div>
 
-            <button 
-              @click="refreshData('orders')" 
-              :disabled="isRefreshing"
-              class="refresh-option"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-              Orders
-            </button>
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('current-delta')"
+                @change="toggleEndpointSelection('current-delta')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('current-delta')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Current Delta
+              </button>
+            </div>
+
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('financial-data')"
+                @change="toggleEndpointSelection('financial-data')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('financial-data')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Financial Data
+              </button>
+            </div>
+
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('orders')"
+                @change="toggleEndpointSelection('orders')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('orders')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Orders
+              </button>
+            </div>
 
             <div class="divider"></div>
 
@@ -700,12 +814,50 @@ const refreshStatus = ref<Array<{
   status: 'loading' | 'success' | 'error'
 }>>([])
 
+// Selected endpoints for batch refresh
+const selectedEndpoints = ref<Set<string>>(new Set())
+
 // Data Refresh Functions
 const toggleRefresh = () => {
   showRefresh.value = !showRefresh.value
   if (!showRefresh.value) {
     refreshStatus.value = []
   }
+}
+
+// Toggle endpoint selection
+const toggleEndpointSelection = (endpoint: string) => {
+  if (selectedEndpoints.value.has(endpoint)) {
+    selectedEndpoints.value.delete(endpoint)
+  } else {
+    selectedEndpoints.value.add(endpoint)
+  }
+}
+
+// Check if endpoint is selected
+const isEndpointSelected = (endpoint: string) => {
+  return selectedEndpoints.value.has(endpoint)
+}
+
+// Refresh only selected endpoints
+const refreshSelectedData = async () => {
+  if (selectedEndpoints.value.size === 0) {
+    alert('Please select at least one item to refresh')
+    return
+  }
+
+  isRefreshing.value = true
+  refreshStatus.value = []
+
+  for (const endpoint of Array.from(selectedEndpoints.value)) {
+    await refreshData(endpoint as any)
+    // Small delay between requests to avoid overwhelming the server
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+
+  isRefreshing.value = false
+  // Clear selection after refresh
+  selectedEndpoints.value.clear()
 }
 
 const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers' | 'current-delta' | 'financial-data' | 'orders') => {
@@ -1475,6 +1627,27 @@ const activeReportName = computed(() => {
   padding: 0.5rem;
 }
 
+.refresh-option-with-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.refresh-checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.refresh-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .refresh-option {
   display: flex;
   align-items: center;
@@ -1490,7 +1663,6 @@ const activeReportName = computed(() => {
   font-weight: 500;
   color: #475569;
   text-align: left;
-  margin-bottom: 0.25rem;
 }
 
 .refresh-option:hover:not(:disabled) {
@@ -1526,6 +1698,27 @@ const activeReportName = computed(() => {
 
 .refresh-all svg {
   color: #f59e0b;
+}
+
+.refresh-selected {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.refresh-selected:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.refresh-selected:disabled {
+  background: #9ca3af;
+  box-shadow: none;
+}
+
+.refresh-selected svg {
+  color: white;
 }
 
 .refresh-status {
