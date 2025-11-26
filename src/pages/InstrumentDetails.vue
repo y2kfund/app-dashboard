@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, provide } from 'vue'
 import { useRoute } from 'vue-router'
 import { putPositions } from '@y2kfund/put-positions-for-single-instrument'
 import { callPositions } from '@y2kfund/call-positions-for-single-instrument'
@@ -16,6 +16,7 @@ import '@y2kfund/instrument-insights/dist/style.css'
 import '@y2kfund/all-trades-for-single-instruments/dist/style.css'
 import '@y2kfund/tasks-for-single-instruments/dist/style.css'
 import { useAuth } from '../composables/useAuth'
+import { eventBus } from '../utils/eventBus'
 
 const { user } = useAuth()
 const route = useRoute()
@@ -23,6 +24,8 @@ const route = useRoute()
 const currentUserId = computed(() => user.value?.id || undefined)
 const symbolRoot = computed(() => (route.params.symbolRoot as string) || '')
 const showAISidebar = ref(false)
+
+provide('eventBus', eventBus);
 
 const totalCapitalUsed = ref(null)
 function handleCapitalUsedChanged(val) {
