@@ -11,7 +11,8 @@
 
     <!-- Show main app if authenticated -->
     <div v-else class="app-layout">
-      <AppHeader />
+      <AppHeader v-if="route.name === 'home'" />
+      <InstrumentDetailsHeader v-else />
       
       <main class="app-main">
         <RouterView />
@@ -21,11 +22,13 @@
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 import AuthWrapper from './components/auth/AuthWrapper.vue'
 import AppHeader from './components/AppHeader.vue'
+import InstrumentDetailsHeader from './components/InstrumentDetailsHeader.vue'
 import { useAuth } from './composables/useAuth'
 
+const route = useRoute()
 const { isAuthenticated, loading: authLoading } = useAuth()
 </script>
 

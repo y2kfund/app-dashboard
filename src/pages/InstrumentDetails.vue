@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, ref, provide } from 'vue'
+import { computed, watch, ref, provide, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { putPositions } from '@y2kfund/put-positions-for-single-instrument'
 import { callPositions } from '@y2kfund/call-positions-for-single-instrument'
@@ -50,6 +50,43 @@ watch([symbolRoot, totalCapitalUsed], ([newSymbol, capital]) => {
     document.title = `${capitalText} | Y2K Fund`
   }
 }, { immediate: true })
+
+// Sections visibility
+const visibleSections = ref<Set<string>>(new Set())
+
+// Initialize visible sections from URL
+const initializeVisibleSections = () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const sectionsParam = urlParams.get('sections')
+  
+  if (sectionsParam) {
+    visibleSections.value = new Set(sectionsParam.split(','))
+  } else {
+    // All sections visible by default
+    visibleSections.value = new Set([
+      'current-positions',
+      'instrument-insight',
+      'tasks',
+      'put-positions',
+      'call-positions',
+      'trades'
+    ])
+  }
+}
+
+// Listen for visibility changes from header
+eventBus.on('sections-visibility-changed', (sections: string[]) => {
+  visibleSections.value = new Set(sections)
+})
+
+// Check if section should be visible
+const shouldShowSection = (sectionId: string) => {
+  return visibleSections.value.has(sectionId)
+}
+
+onMounted(() => {
+  initializeVisibleSections()
+})
 </script>
 
 <template>
@@ -63,7 +100,7 @@ watch([symbolRoot, totalCapitalUsed], ([newSymbol, capital]) => {
         >
 
           <!-- Current Positions Section -->
-          <section class="positions-section">
+          <section v-if="shouldShowSection('current-positions')" class="positions-section">
             <currentPositions 
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
@@ -73,7 +110,7 @@ watch([symbolRoot, totalCapitalUsed], ([newSymbol, capital]) => {
           </section>
 
           <!-- Instrument Insight Section -->
-          <section class="positions-section">
+          <section v-if="shouldShowSection('instrument-insight')" class="positions-section">
             <InstrumentInsight 
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
@@ -81,7 +118,8 @@ watch([symbolRoot, totalCapitalUsed], ([newSymbol, capital]) => {
             />
           </section>
 
-          <section class="positions-section">
+          <!-- Tasks Section -->
+          <section v-if="shouldShowSection('tasks')" class="positions-section">
             <TasksForSingleInstrument 
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
@@ -90,7 +128,7 @@ watch([symbolRoot, totalCapitalUsed], ([newSymbol, capital]) => {
           </section>
 
           <!-- Put Positions Section -->
-          <section class="positions-section">
+          <section v-if="shouldShowSection('put-positions')" class="positions-section">
             <putPositions 
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
@@ -99,7 +137,7 @@ watch([symbolRoot, totalCapitalUsed], ([newSymbol, capital]) => {
           </section>
 
           <!-- Call Positions Section -->
-          <section class="positions-section">
+          <section v-if="shouldShowSection('call-positions')" class="positions-section">
             <callPositions 
               v-if="symbolRoot"
               :symbol-root="symbolRoot"
@@ -107,7 +145,8 @@ watch([symbolRoot, totalCapitalUsed], ([newSymbol, capital]) => {
             />
           </section>
 
-           <section class="positions-section">
+          <!-- Trades Section -->
+          <section v-if="shouldShowSection('trades')" class="positions-section">
             <Trades 
               v-if="symbolRoot" 
               account-id="demo"

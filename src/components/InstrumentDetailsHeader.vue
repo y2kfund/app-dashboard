@@ -450,6 +450,50 @@
             </div>
           </div>
         </div>
+
+        <!-- Sections Visibility Dropdown -->
+        <div class="sections-dropdown-container" ref="sectionsDropdownRef" v-if="route.name === 'instrument-details'">
+          <button @click="toggleSectionsDropdown" class="sections-button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+            </svg>
+            Sections
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div v-if="showSectionsDropdown" class="sections-dropdown">
+            <div class="sections-header">
+              <div class="sections-header-content">
+                <h4>Show/Hide Sections</h4>
+                <p>Toggle visibility of page sections</p>
+              </div>
+              <button @click="showSectionsDropdown = false" class="close-sections-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="sections-list">
+              <div 
+                v-for="section in availableSections" 
+                :key="section.id"
+                class="section-item"
+              >
+                <label class="section-label">
+                  <input 
+                    type="checkbox" 
+                    :checked="isSectionVisible(section.id)"
+                    @change="toggleSection(section.id)"
+                    class="section-checkbox"
+                  />
+                  <span class="section-name">{{ section.label }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <!-- User menu -->
         <div class="user-menu">
@@ -908,21 +952,71 @@ const refreshAllData = async () => {
   isRefreshing.value = false
 }
 
-// Other existing functions...
-const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value
+// Sections visibility state
+const showSectionsDropdown = ref(false)
+const sectionsDropdownRef = ref<HTMLElement>()
+
+// Define available sections
+const availableSections = [
+  { id: 'current-positions', label: 'Current Positions', default: true },
+  { id: 'instrument-insight', label: 'Key Factors / Plan', default: true },
+  { id: 'tasks', label: 'Tasks', default: true },
+  { id: 'put-positions', label: 'Put Positions', default: true },
+  { id: 'call-positions', label: 'Call Positions', default: true },
+  { id: 'trades', label: 'Orders / Trades', default: true }
+]
+
+// Get visible sections from URL or defaults
+const visibleSections = computed(() => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const sectionsParam = urlParams.get('sections')
+  
+  if (sectionsParam) {
+    return new Set(sectionsParam.split(','))
+  }
+  
+  // Return all sections by default
+  return new Set(availableSections.map(s => s.id))
+})
+
+// Toggle section visibility
+const toggleSection = (sectionId: string) => {
+  const currentSections = new Set(visibleSections.value)
+  
+  if (currentSections.has(sectionId)) {
+    currentSections.delete(sectionId)
+  } else {
+    currentSections.add(sectionId)
+  }
+  
+  // Update URL
+  const urlParams = new URLSearchParams(window.location.search)
+  if (currentSections.size === availableSections.length) {
+    // If all sections are visible, remove the parameter
+    urlParams.delete('sections')
+  } else {
+    urlParams.set('sections', Array.from(currentSections).join(','))
+  }
+  
+  // Update URL without reload
+  const newUrl = `${window.location.pathname}?${urlParams.toString()}`
+  window.history.pushState({}, '', newUrl)
+  
+  // Emit event to parent component
+  eventBus.emit('sections-visibility-changed', Array.from(currentSections))
 }
 
-const closeDropdown = () => {
-  isDropdownOpen.value = false
+// Toggle sections dropdown
+const toggleSectionsDropdown = () => {
+  showSectionsDropdown.value = !showSectionsDropdown.value
 }
 
-const handleSignOut = () => {
-  closeDropdown()
-  signOut()
+// Check if section is visible
+const isSectionVisible = (sectionId: string) => {
+  return visibleSections.value.has(sectionId)
 }
 
-// Close dropdowns when clicking outside
+// Modify the existing handleClickOutside function:
 const handleClickOutside = (event: Event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     closeDropdown()
@@ -932,6 +1026,9 @@ const handleClickOutside = (event: Event) => {
   }
   if (refreshDropdownRef.value && !refreshDropdownRef.value.contains(event.target as Node)) {
     showRefresh.value = false
+  }
+  if (sectionsDropdownRef.value && !sectionsDropdownRef.value.contains(event.target as Node)) {
+    showSectionsDropdown.value = false
   }
 }
 
@@ -2142,5 +2239,145 @@ span.active-report-name {
 
 .drawer-content::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+/* Sections Dropdown */
+.sections-dropdown-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sections-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.sections-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.sections-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 280px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.sections-header {
+  padding: 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sections-header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sections-header h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sections-header p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.sections-list {
+  padding: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.section-item {
+  margin-bottom: 0.25rem;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.section-label:hover {
+  background: #f8fafc;
+}
+
+.section-checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #10b981;
+}
+
+.section-name {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.section-label:hover .section-name {
+  color: #1e293b;
+}
+
+.close-sections-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.close-sections-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.close-sections-btn:active {
+  transform: scale(0.95);
 }
 </style>
