@@ -77,6 +77,8 @@ const initializeVisibleSections = () => {
 // Listen for visibility changes from header
 eventBus.on('sections-visibility-changed', (sections: string[]) => {
   visibleSections.value = new Set(sections)
+
+  console.log('Sections visibility changed:', sections)
 })
 
 // Check if section should be visible

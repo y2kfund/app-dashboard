@@ -651,6 +651,15 @@ const openRiskManagement = () => {
   closeDropdown()
 }
 
+const toggleDropdown = () => {
+  isDropdownOpen.value = !isDropdownOpen.value
+}
+
+// Add this function
+const closeDropdown = () => {
+  isDropdownOpen.value = false
+}
+
 const setDefaultReportHandler = async (reportId: string) => {
   try {
     await setDefaultReport(reportId)
@@ -981,7 +990,14 @@ const visibleSections = computed(() => {
 
 // Toggle section visibility
 const toggleSection = (sectionId: string) => {
-  const currentSections = new Set(visibleSections.value)
+  // Get current sections from URL
+  const urlParams = new URLSearchParams(window.location.search)
+  const sectionsParam = urlParams.get('sections')
+  
+  // Create a set from current URL state, not from computed property
+  const currentSections = sectionsParam 
+    ? new Set(sectionsParam.split(','))
+    : new Set(availableSections.map(s => s.id))
   
   if (currentSections.has(sectionId)) {
     currentSections.delete(sectionId)
@@ -990,7 +1006,6 @@ const toggleSection = (sectionId: string) => {
   }
   
   // Update URL
-  const urlParams = new URLSearchParams(window.location.search)
   if (currentSections.size === availableSections.length) {
     // If all sections are visible, remove the parameter
     urlParams.delete('sections')
