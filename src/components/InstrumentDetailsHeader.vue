@@ -294,6 +294,28 @@
                 </button>
               </div>
 
+              <div class="refresh-option-with-checkbox">
+                <input 
+                  type="checkbox" 
+                  :checked="isEndpointSelected('today-orders-trades')"
+                  @change="toggleEndpointSelection('today-orders-trades')"
+                  :disabled="isRefreshing"
+                  class="refresh-checkbox"
+                />
+                <button 
+                  @click="refreshData('today-orders-trades')" 
+                  :disabled="isRefreshing"
+                  class="refresh-option"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                  </svg>
+                  Today's Orders and Trades
+                </button>
+              </div>
+
               <div class="divider"></div>
 
               <button 
@@ -860,7 +882,7 @@ const refreshSelectedData = async () => {
   selectedEndpoints.value.clear()
 }
 
-const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers' | 'current-delta' | 'financial-data' | 'orders') => {
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers' | 'current-delta' | 'financial-data' | 'orders' | 'today-orders-trades') => {
   const labels = {
     'positions': 'Positions',
     'maintenance-margin': 'Maintenance Margin',
@@ -872,7 +894,8 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' 
     'transfers': 'Transfers',
     'current-delta': 'Current Delta',
     'financial-data': 'Financial Data',
-    'orders': 'Orders'
+    'orders': 'Orders',
+    'today-orders-trades': 'Today\'s Orders & Trades'
   }
 
   const statusId = `refresh-${endpoint}-${Date.now()}`
@@ -935,7 +958,7 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' 
 }
 
 const refreshAllData = async () => {
-  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'transfers' | 'cash-transactions' | 'current-margin-impact' | 'current-delta' | 'orders' | 'financial-data'> = [
+  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'transfers' | 'cash-transactions' | 'current-margin-impact' | 'current-delta' | 'orders' | 'financial-data' | 'today-orders-trades'> = [
     'positions', 
     'maintenance-margin', 
     'nlv',
@@ -946,7 +969,8 @@ const refreshAllData = async () => {
     'current-margin-impact',
     'current-delta',
     'orders',
-    'financial-data'
+    'financial-data',
+    'today-orders-trades'
   ]
 
   isRefreshing.value = true
