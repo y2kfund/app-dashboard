@@ -72,6 +72,7 @@
 
             <div class="divider"></div>
 
+            <!-- NLV with click status -->
             <div class="refresh-option-with-checkbox">
               <input 
                 type="checkbox" 
@@ -90,8 +91,29 @@
                 </svg>
                 Net Liquidation Value
               </button>
+              <button 
+                class="status-arrow-btn"
+                :class="{ 'active': expandedEndpoint === 'nlv' }"
+                @click.stop="toggleEndpointStatus('nlv')"
+                title="View fetch history"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6,9 12,15 18,9"></polyline>
+                </svg>
+              </button>
+              
+              <!-- NLV Fetch Status Popover -->
+              <div v-if="expandedEndpoint === 'nlv'" class="fetch-status-popover-container" @click.stop>
+                <FetchStatusPopover 
+                  title="Net Liquidation Value"
+                  :data="getStatusData('nlv')"
+                  :accounts="accountAliases"
+                  :is-loading="isLoadingFetchStatus"
+                />
+              </div>
             </div>
 
+            <!-- Maintenance Margin with click status -->
             <div class="refresh-option-with-checkbox">
               <input 
                 type="checkbox" 
@@ -112,8 +134,29 @@
                 </svg>
                 Maintenance Margin
               </button>
+              <button 
+                class="status-arrow-btn"
+                :class="{ 'active': expandedEndpoint === 'maintenance-margin' }"
+                @click.stop="toggleEndpointStatus('maintenance-margin')"
+                title="View fetch history"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6,9 12,15 18,9"></polyline>
+                </svg>
+              </button>
+              
+              <!-- Maintenance Margin Fetch Status Popover -->
+              <div v-if="expandedEndpoint === 'maintenance-margin'" class="fetch-status-popover-container" @click.stop>
+                <FetchStatusPopover 
+                  title="Maintenance Margin"
+                  :data="getStatusData('maintenance-margin')"
+                  :accounts="accountAliases"
+                  :is-loading="isLoadingFetchStatus"
+                />
+              </div>
             </div>
 
+            <!-- Positions with click status -->
             <div class="refresh-option-with-checkbox">
               <input 
                 type="checkbox" 
@@ -133,6 +176,26 @@
                 </svg>
                 Positions
               </button>
+              <button 
+                class="status-arrow-btn"
+                :class="{ 'active': expandedEndpoint === 'positions' }"
+                @click.stop="toggleEndpointStatus('positions')"
+                title="View fetch history"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6,9 12,15 18,9"></polyline>
+                </svg>
+              </button>
+              
+              <!-- Positions Fetch Status Popover -->
+              <div v-if="expandedEndpoint === 'positions'" class="fetch-status-popover-container" @click.stop>
+                <FetchStatusPopover 
+                  title="Positions"
+                  :data="getStatusData('positions')"
+                  :accounts="accountAliases"
+                  :is-loading="isLoadingFetchStatus"
+                />
+              </div>
             </div>
 
             <div class="refresh-option-with-checkbox">
@@ -619,9 +682,11 @@ import type { TimelineEvent } from '@y2kfund/analyze-timeline'
 import type { AnalyzeTimelineConfig } from '@y2kfund/analyze-timeline/dist/types'
 import '@y2kfund/analyze-timeline/dist/style.css'
 import { useCustomReports } from '../composables/useCustomReports'
+import { useFetchStatus } from '../composables/useFetchStatus'
 import { eventBus } from '../utils/eventBus'
 import { ActivityLog } from '@y2kfund/activity-log'
 import '@y2kfund/activity-log/dist/style.css'
+import FetchStatusPopover from './FetchStatusPopover.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -638,6 +703,27 @@ const newReportName = ref('')
 const editingReportId = ref<string | null>(null)
 const editingReportName = ref('')
 const { reports, isLoading, loadReports, saveReport, updateReport, archiveReport, setDefaultReport, getDefaultReport } = useCustomReports()
+
+// Fetch Status Hover
+const { 
+  fetchStatusData, 
+  accountAliases, 
+  isLoadingFetchStatus, 
+  fetchAccountAliases, 
+  fetchStatusForEndpoint, 
+  getStatusData 
+} = useFetchStatus()
+const expandedEndpoint = ref<string | null>(null)
+
+// Toggle endpoint status panel
+const toggleEndpointStatus = (endpoint: string) => {
+  if (expandedEndpoint.value === endpoint) {
+    expandedEndpoint.value = null
+  } else {
+    expandedEndpoint.value = endpoint
+    fetchStatusForEndpoint(endpoint)
+  }
+}
 
 // Timeline and conversation modal state
 const showConversationModal = ref(false)
@@ -1095,12 +1181,14 @@ const handleClickOutside = (event: Event) => {
   }
   if (refreshDropdownRef.value && !refreshDropdownRef.value.contains(event.target as Node)) {
     showRefresh.value = false
+    expandedEndpoint.value = null // Also close fetch status popover
   }
 }
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   loadReports()
+  fetchAccountAliases() // Load account aliases for fetch status popover
 })
 
 onUnmounted(() => {
@@ -1625,7 +1713,7 @@ const activeReportName = computed(() => {
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   z-index: 50;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .refresh-header {
@@ -1656,6 +1744,87 @@ const activeReportName = computed(() => {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.25rem;
+  position: relative;
+}
+
+/* Arrow button to toggle fetch status */
+.status-arrow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.status-arrow-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.status-arrow-btn.active {
+  background: #3b82f6;
+  border-color: #2563eb;
+  color: white;
+}
+
+.status-arrow-btn.active svg {
+  transform: rotate(180deg);
+}
+
+.status-arrow-btn svg {
+  transition: transform 0.2s ease;
+  color: #64748b;
+}
+
+.status-arrow-btn.active svg {
+  color: white;
+}
+
+/* Floating popover for fetch status */
+.fetch-status-popover-container {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 0;
+  z-index: 1000;
+  animation: popoverSlideIn 0.2s ease-out;
+}
+
+@keyframes popoverSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Adjust position if going off-screen to the right */
+@media (max-width: 1400px) {
+  .fetch-status-popover-container {
+    left: auto;
+    right: calc(100% + 8px);
+  }
+  
+  @keyframes popoverSlideIn {
+    from {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
 }
 
 .refresh-checkbox {
