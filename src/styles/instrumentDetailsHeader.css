@@ -496,7 +496,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   z-index: 50;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .refresh-header {
@@ -527,6 +527,7 @@
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.25rem;
+  position: relative;
 }
 
 .refresh-checkbox {
@@ -670,6 +671,67 @@
 
 .status-item.error .status-label::before {
   content: "❌ ";
+}
+
+/* Arrow button to toggle fetch status */
+.status-arrow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.status-arrow-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.status-arrow-btn.active {
+  background: #3b82f6;
+  border-color: #2563eb;
+  color: white;
+}
+
+.status-arrow-btn.active svg {
+  transform: rotate(180deg);
+}
+
+.status-arrow-btn svg {
+  transition: transform 0.2s ease;
+  color: #64748b;
+}
+
+.status-arrow-btn.active svg {
+  color: white;
+}
+
+/* Floating popover for fetch status - positioned to the LEFT */
+.fetch-status-popover-container {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 0;
+  z-index: 1000;
+  animation: popoverSlideIn 0.2s ease-out;
+}
+
+@keyframes popoverSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Custom Reports Dropdown */

@@ -78,6 +78,26 @@
                   </svg>
                   Net Liquidation Value
                 </button>
+                <button 
+                  class="status-arrow-btn"
+                  :class="{ 'active': expandedEndpoint === 'nlv' }"
+                  @click.stop="toggleEndpointStatus('nlv')"
+                  title="View fetch history"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6,9 12,15 18,9"></polyline>
+                  </svg>
+                </button>
+                
+                <!-- NLV Fetch Status Popover -->
+                <div v-if="expandedEndpoint === 'nlv'" class="fetch-status-popover-container" @click.stop>
+                  <FetchStatusPopover 
+                    title="Net Liquidation Value"
+                    :data="getStatusData('nlv')"
+                    :accounts="accountAliases"
+                    :is-loading="isLoadingFetchStatus"
+                  />
+                </div>
               </div>
 
               <div class="refresh-option-with-checkbox">
@@ -100,6 +120,26 @@
                   </svg>
                   Maintenance Margin
                 </button>
+                <button 
+                  class="status-arrow-btn"
+                  :class="{ 'active': expandedEndpoint === 'maintenance-margin' }"
+                  @click.stop="toggleEndpointStatus('maintenance-margin')"
+                  title="View fetch history"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6,9 12,15 18,9"></polyline>
+                  </svg>
+                </button>
+                
+                <!-- Maintenance Margin Fetch Status Popover -->
+                <div v-if="expandedEndpoint === 'maintenance-margin'" class="fetch-status-popover-container" @click.stop>
+                  <FetchStatusPopover 
+                    title="Maintenance Margin"
+                    :data="getStatusData('maintenance-margin')"
+                    :accounts="accountAliases"
+                    :is-loading="isLoadingFetchStatus"
+                  />
+                </div>
               </div>
 
               <div class="refresh-option-with-checkbox">
@@ -121,6 +161,26 @@
                   </svg>
                   Positions
                 </button>
+                <button 
+                  class="status-arrow-btn"
+                  :class="{ 'active': expandedEndpoint === 'positions' }"
+                  @click.stop="toggleEndpointStatus('positions')"
+                  title="View fetch history"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6,9 12,15 18,9"></polyline>
+                  </svg>
+                </button>
+                
+                <!-- Positions Fetch Status Popover -->
+                <div v-if="expandedEndpoint === 'positions'" class="fetch-status-popover-container" @click.stop>
+                  <FetchStatusPopover 
+                    title="Positions"
+                    :data="getStatusData('positions')"
+                    :accounts="accountAliases"
+                    :is-loading="isLoadingFetchStatus"
+                  />
+                </div>
               </div>
 
               <div class="refresh-option-with-checkbox">
@@ -639,6 +699,8 @@ import { useCustomReports } from '../composables/useCustomReports'
 import { eventBus } from '../utils/eventBus'
 import { ActivityLog } from '@y2kfund/activity-log'
 import '@y2kfund/activity-log/dist/style.css'
+import { useFetchStatus } from '../composables/useFetchStatus'
+import FetchStatusPopover from './FetchStatusPopover.vue'
 
 const router = useRouter()
 const route = useRoute() 
@@ -655,6 +717,27 @@ const newReportName = ref('')
 const editingReportId = ref<string | null>(null)
 const editingReportName = ref('')
 const { reports, isLoading, loadReports, saveReport, updateReport, archiveReport, setDefaultReport, getDefaultReport } = useCustomReports()
+
+// Fetch Status
+const { 
+  fetchStatusData, 
+  accountAliases, 
+  isLoadingFetchStatus, 
+  fetchAccountAliases, 
+  fetchStatusForEndpoint, 
+  getStatusData 
+} = useFetchStatus()
+const expandedEndpoint = ref<string | null>(null)
+
+// Toggle endpoint status panel
+const toggleEndpointStatus = (endpoint: string) => {
+  if (expandedEndpoint.value === endpoint) {
+    expandedEndpoint.value = null
+  } else {
+    expandedEndpoint.value = endpoint
+    fetchStatusForEndpoint(endpoint)
+  }
+}
 
 const showActivityLog = ref(false)
 
@@ -1065,6 +1148,7 @@ const handleClickOutside = (event: Event) => {
   }
   if (refreshDropdownRef.value && !refreshDropdownRef.value.contains(event.target as Node)) {
     showRefresh.value = false
+    expandedEndpoint.value = null // Also close fetch status popover
   }
   if (sectionsDropdownRef.value && !sectionsDropdownRef.value.contains(event.target as Node)) {
     showSectionsDropdown.value = false
@@ -1074,6 +1158,7 @@ const handleClickOutside = (event: Event) => {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   loadReports()
+  fetchAccountAliases() // Load account aliases for fetch status popover
 })
 
 onUnmounted(() => {
