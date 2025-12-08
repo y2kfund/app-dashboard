@@ -89,7 +89,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                 </svg>
-                Net Liquidation Value
+                Net Liquidation Value<span style="font-size: 10px;">(Docker)</span>
               </button>
               <button 
                 class="status-arrow-btn"
@@ -132,7 +132,7 @@
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Maintenance Margin
+                Maintenance Margin<span style="font-size: 10px;">(Docker)</span>
               </button>
               <button 
                 class="status-arrow-btn"
@@ -174,7 +174,7 @@
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                   <path d="M9 9h6v6H9z"/>
                 </svg>
-                Positions
+                Positions<span style="font-size: 10px;">(Docker)</span>
               </button>
               <button 
                 class="status-arrow-btn"
@@ -215,7 +215,7 @@
                   <line x1="12" y1="1" x2="12" y2="23"/>
                   <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                 </svg>
-                Current Market Prices
+                Current Market Prices<span style="font-size: 10px;">(Docker)</span>
               </button>
             </div>
 
@@ -237,7 +237,7 @@
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Current Margin Impact
+                Current Margin Impact<span style="font-size: 10px;">(Docker)</span>
               </button>
             </div>
 
@@ -255,7 +255,7 @@
                 class="refresh-option"
               >
                 <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3.043V11m0 22v6m17 .043v6m0-30V23M3.077 15.38c.062-2.351 1.627-4.29 3.978-4.365a30 30 0 0 1 1.89 0c2.351.075 3.916 2.014 3.978 4.365c.042 1.636.077 3.823.077 6.62s-.035 4.984-.077 6.62c-.062 2.351-1.627 4.29-3.978 4.365a30 30 0 0 1-1.89 0c-2.351-.075-3.916-2.014-3.978-4.365C3.035 26.984 3 24.797 3 22s.035-4.984.077-6.62m16.961 12.128c.06-2.489 1.82-4.464 4.309-4.503a43 43 0 0 1 1.306 0c2.489.04 4.25 2.014 4.309 4.503c.023.975.038 2.135.038 3.492s-.015 2.517-.038 3.493c-.06 2.488-1.82 4.463-4.309 4.502a43 43 0 0 1-1.306 0c-2.489-.04-4.25-2.014-4.309-4.502C20.015 33.517 20 32.356 20 31s.015-2.517.038-3.492M45 7.607S43 6 40 6c-2.5 0-5 1.607-5 3.75c0 5.357 10 2.143 10 7.5c0 2.143-2.5 3.75-5 3.75c-3 0-5-1.607-5-1.607M40 6V3m0 21v-3"/></svg>
-                Trades
+                Trades<span style="font-size: 10px;">(Flex Query)</span>
               </button>
             </div>
 
@@ -277,7 +277,7 @@
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Cash Transactions
+                Cash Transactions<span style="font-size: 10px;">(Flex Query)</span>
               </button>
             </div>
 
@@ -299,7 +299,7 @@
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Transfers
+                Transfers<span style="font-size: 10px;">(Flex Query)</span>
               </button>
             </div>
 
@@ -321,7 +321,7 @@
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Current Delta
+                Current Delta<span style="font-size: 10px;">(Docker)</span>
               </button>
             </div>
 
@@ -343,7 +343,7 @@
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Financial Data
+                Financial Data<span style="font-size: 10px;">(Docker)</span>
               </button>
             </div>
 
@@ -365,7 +365,7 @@
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Orders
+                Orders<span style="font-size: 10px;">(Flex Query)</span>
               </button>
             </div>
 
@@ -387,7 +387,7 @@
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-                Today's Orders and Trades
+                Today's Orders and Trades<span style="font-size: 10px;">(Flex Query)</span>
               </button>
             </div>
 
@@ -1707,7 +1707,7 @@ const activeReportName = computed(() => {
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  width: 300px;
+  width: 325px;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -1844,7 +1844,7 @@ const activeReportName = computed(() => {
 .refresh-option {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.25rem;
   width: 100%;
   padding: 0.75rem;
   background: transparent;
