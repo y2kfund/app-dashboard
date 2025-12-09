@@ -8,6 +8,8 @@ import { AiReccomendations } from '@y2kfund/ai-recommendations-for-single-instru
 import { InstrumentInsight } from '@y2kfund/instrument-insights'
 import { Trades } from '@y2kfund/all-trades-for-single-instruments'
 import { TasksForSingleInstrument } from '@y2kfund/tasks-for-single-instruments'
+import { documents } from '@y2kfund/documents-for-single-instrument'
+import '@y2kfund/documents-for-single-instrument/dist/style.css'
 import '@y2kfund/call-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/put-positions-for-single-instrument/dist/style.css'
 import '@y2kfund/current-positions-for-single-instrument/dist/style.css'
@@ -67,6 +69,7 @@ const initializeVisibleSections = () => {
       'current-positions',
       'instrument-insight',
       'tasks',
+      'documents',
       'put-positions',
       'call-positions',
       'trades'
@@ -121,12 +124,23 @@ onMounted(() => {
           </section>
 
           <!-- Tasks Section -->
-          <section v-if="shouldShowSection('tasks')" class="positions-section">
-            <TasksForSingleInstrument 
-              v-if="symbolRoot"
-              :symbol-root="symbolRoot"
-              :user-id="currentUserId"
-            />
+          <section v-if="shouldShowSection('tasks')" class="positions-section tasks-documents-row">
+            <div class="tasks-documents-container">
+              <div class="tasks-column">
+                <TasksForSingleInstrument 
+                  v-if="symbolRoot"
+                  :symbol-root="symbolRoot"
+                  :user-id="currentUserId"
+                />
+              </div>
+              <div class="documents-column">
+                <documents 
+                  v-if="symbolRoot"
+                  :symbol-root="symbolRoot"
+                  :user-id="currentUserId"
+                />
+              </div>
+            </div>
           </section>
 
           <!-- Put Positions Section -->
@@ -232,6 +246,25 @@ onMounted(() => {
   padding: 0.25rem;
 }
 
+.tasks-documents-row {
+  padding: 0;
+}
+
+.tasks-documents-container {
+  display: flex;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.tasks-column,
+.documents-column {
+  flex: 1;
+  min-width: 0;
+  background: white;
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
 .ai-sidebar {
   min-width: 450px;
   max-width: 35%;
@@ -274,6 +307,9 @@ onMounted(() => {
   }
   .instrument-details-container.full-width {
     max-width: 100%;
+  }
+  .tasks-documents-container {
+    flex-direction: column;
   }
 }
 </style>
