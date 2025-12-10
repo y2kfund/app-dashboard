@@ -118,3 +118,6 @@ button.tab-button,
 .summary-label {
     margin-bottom: 0.25rem !important;
 }
+.summary-date-picker label {
+    width: 60px !important;
+}
