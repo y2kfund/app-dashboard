@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch, ref, provide, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { putPositions } from '@y2kfund/put-positions-for-single-instrument'
 import { callPositions } from '@y2kfund/call-positions-for-single-instrument'
 import { currentPositions } from '@y2kfund/current-positions-for-single-instrument'
@@ -22,12 +22,32 @@ import { eventBus } from '../utils/eventBus'
 
 const { user } = useAuth()
 const route = useRoute()
+const router = useRouter()
 
 const currentUserId = computed(() => user.value?.id || undefined)
 const symbolRoot = computed(() => (route.params.symbolRoot as string) || '')
 const showAISidebar = ref(false)
 
-provide('eventBus', eventBus);
+// Initialize sidebar state from URL
+const initializeSidebarState = () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const sidebarParam = urlParams.get('aiSidebar')
+  showAISidebar.value = sidebarParam === 'true'
+}
+
+// Update URL when sidebar state changes
+watch(showAISidebar, (newValue) => {
+  const urlParams = new URLSearchParams(window.location.search)
+  
+  if (newValue) {
+    urlParams.set('aiSidebar', 'true')
+  } else {
+    urlParams.delete('aiSidebar')
+  }
+  
+  const newUrl = `${window.location.pathname}?${urlParams.toString()}`
+  router.replace(newUrl)
+})
 
 const totalCapitalUsed = ref(null)
 function handleCapitalUsedChanged(val) {
@@ -91,6 +111,7 @@ const shouldShowSection = (sectionId: string) => {
 
 onMounted(() => {
   initializeVisibleSections()
+  initializeSidebarState()
 })
 </script>
 
