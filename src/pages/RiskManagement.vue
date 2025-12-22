@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { relativeCapitalDeployed } from '@y2kfund/relative-capital-deployed-risk-management'
 import '@y2kfund/relative-capital-deployed-risk-management/dist/style.css'
 import { capitalAcrossThesis } from '@y2kfund/capital-across-thesis-risk-management'
@@ -11,12 +12,34 @@ import '@y2kfund/ai-recommendations-for-single-instrument/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 
 const { user } = useAuth()
+const router = useRouter()
 
 // Active tab state
 type TabType = 'capital-deployed' | 'capital-across-thesis' | 'pe-ratio'
 const activeTab = ref<TabType>('capital-deployed')
 
 const showAISidebar = ref(false)
+
+// Initialize sidebar state from URL
+const initializeSidebarState = () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const sidebarParam = urlParams.get('aiSidebar')
+  showAISidebar.value = sidebarParam === 'true'
+}
+
+// Update URL when sidebar state changes
+watch(showAISidebar, (newValue) => {
+  const urlParams = new URLSearchParams(window.location.search)
+  
+  if (newValue) {
+    urlParams.set('aiSidebar', 'true')
+  } else {
+    urlParams.delete('aiSidebar')
+  }
+  
+  const newUrl = `${window.location.pathname}?${urlParams.toString()}`
+  router.replace(newUrl)
+})
 
 // Update document title
 watch(activeTab, (newTab) => {
@@ -31,6 +54,10 @@ watch(activeTab, (newTab) => {
 function switchTab(tab: TabType) {
   activeTab.value = tab
 }
+
+onMounted(() => {
+  initializeSidebarState()
+})
 </script>
 
 <template>

@@ -375,6 +375,7 @@ function restoreMaximized(columnId: string | null) {
 }
 
 onMounted(() => {
+  initializeSidebarState() // Add this line
   loadFromUrlParams()
   eventBus.on('timeline:show-dropdown', handleTimelineShowDropdown)
   nextTick(() => {
@@ -388,8 +389,8 @@ onMounted(() => {
           handles: 'e, se, s, sw, w',
           minHeight: 50
         },
-        disableOneColumnMode: false, // Allow one column mode on mobile
-        animate: true // Smooth animations when items move
+        disableOneColumnMode: false,
+        animate: true
       }, gridstackRef.value);
 
       // Restore layout from URL param
