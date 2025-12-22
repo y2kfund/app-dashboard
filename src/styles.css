@@ -121,3 +121,34 @@ button.tab-button,
 .summary-date-picker label {
     width: 60px !important;
 }
+
+.ai-sidebar {
+  min-width: 450px;
+  max-width: 35%;
+  flex-shrink: 0;
+  overflow-y: auto;
+  transition: all 0.3s;
+}
+
+.chat-float-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  background: #2c3e50;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.chat-float-btn:hover {
+  background: #34495e;
+}

@@ -9,6 +9,7 @@ import { Trades } from '@y2kfund/trades'
 import { Transfers } from '@y2kfund/transfers'
 import { CashTransactions } from '@y2kfund/cash-transactions'
 import { aiAnalyseTimelineConversationCard, ConversationDropdown } from '@y2kfund/analyze-timeline'
+import { AiReccomendations } from '@y2kfund/ai-recommendations-for-single-instrument'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
 import '@y2kfund/thesis/dist/style.css'
@@ -16,6 +17,7 @@ import '@y2kfund/tasks/dist/style.css'
 import '@y2kfund/trades/dist/style.css'
 import '@y2kfund/transfers/dist/style.css'
 import '@y2kfund/cash-transactions/dist/style.css'
+import '@y2kfund/ai-recommendations-for-single-instrument/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 import { useSupabase } from '@y2kfund/core'
 import { eventBus } from '../utils/eventBus'
@@ -30,6 +32,29 @@ const showAddGridMenu = ref(false)
 
 // Computed property for current user ID
 const currentUserId = computed(() => user.value?.id || undefined)
+
+const showAISidebar = ref(false)
+
+// Initialize sidebar state from URL
+const initializeSidebarState = () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const sidebarParam = urlParams.get('aiSidebar')
+  showAISidebar.value = sidebarParam === 'true'
+}
+
+// Update URL when sidebar state changes
+watch(showAISidebar, (newValue) => {
+  const urlParams = new URLSearchParams(window.location.search)
+  
+  if (newValue) {
+    urlParams.set('aiSidebar', 'true')
+  } else {
+    urlParams.delete('aiSidebar')
+  }
+  
+  const newUrl = `${window.location.pathname}?${urlParams.toString()}`
+  router.replace(newUrl)
+})
 
 // Provide the event bus to child components
 provide('eventBus', eventBus);
@@ -631,6 +656,15 @@ function addGrid(typeId: string) {
           </div>
         </template>
       </div>
+      <aside 
+        v-if="showAISidebar"
+        class="ai-sidebar"
+      >
+        <AiReccomendations 
+          :symbol-root="`Main Page`"
+          :user-id="currentUserId"
+        />
+      </aside>
     </div>
     <!-- Overlay maximized view (renders the same component in a top layer) -->
     <div v-if="maximizedWidget" class="overlay" role="dialog" aria-modal="true">
@@ -655,6 +689,14 @@ function addGrid(typeId: string) {
       </div>
     </div>
 
+    <button 
+      class="chat-float-btn"
+      @click="showAISidebar = !showAISidebar"
+      aria-label="Toggle AI Recommendations"
+    >
+      <span v-if="showAISidebar" style="color: #fff;">X</span>
+      <span v-else>💬</span>
+    </button>
   </main>
 </template>
 
@@ -729,6 +771,7 @@ function addGrid(typeId: string) {
 
 .dashboard-grid {
   margin: 0 auto;
+  display: flex;
 }
 
 .dashboard-column {

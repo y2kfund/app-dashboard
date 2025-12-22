@@ -6,6 +6,8 @@ import { capitalAcrossThesis } from '@y2kfund/capital-across-thesis-risk-managem
 import '@y2kfund/capital-across-thesis-risk-management/dist/style.css'
 import { peRatioAnalysis } from '@y2kfund/pe-ratio-analysis-risk-management'
 import '@y2kfund/pe-ratio-analysis-risk-management/dist/style.css'
+import { AiReccomendations } from '@y2kfund/ai-recommendations-for-single-instrument'
+import '@y2kfund/ai-recommendations-for-single-instrument/dist/style.css'
 import { useAuth } from '../composables/useAuth'
 
 const { user } = useAuth()
@@ -13,6 +15,8 @@ const { user } = useAuth()
 // Active tab state
 type TabType = 'capital-deployed' | 'capital-across-thesis' | 'pe-ratio'
 const activeTab = ref<TabType>('capital-deployed')
+
+const showAISidebar = ref(false)
 
 // Update document title
 watch(activeTab, (newTab) => {
@@ -108,8 +112,25 @@ function switchTab(tab: TabType) {
             />
           </section>
         </div>
+        <aside 
+          v-if="showAISidebar"
+          class="ai-sidebar"
+        >
+          <AiReccomendations 
+            :symbol-root="`Main Page`"
+            :user-id="user?.id"
+          />
+        </aside>
       </div>
     </main>
+    <button 
+      class="chat-float-btn"
+      @click="showAISidebar = !showAISidebar"
+      aria-label="Toggle AI Recommendations"
+    >
+      <span v-if="showAISidebar" style="color: #fff;">X</span>
+      <span v-else>💬</span>
+    </button>
   </div>
 </template>
 
