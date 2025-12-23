@@ -977,3 +977,9 @@ p {
   background: transparent;
 }
 </style>
+
+<style>
+.pdf-annotation-viewer {
+    top: 86px !important;
+}
+</style>
