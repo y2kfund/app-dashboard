@@ -37,6 +37,12 @@ const router = createRouter({
     },
     // Catch-all fallback
     { path: '/:pathMatch(.*)*', redirect: '/' },
+    {
+      path: '/notes/:noteId',
+      name: 'notes',
+      component: () => import('../pages/Notes.vue'),
+      props: true
+    }
   ]
 })
 
