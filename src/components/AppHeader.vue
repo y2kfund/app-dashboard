@@ -156,6 +156,50 @@
               </div>
             </div>
 
+            <!-- Settled Cash with click status -->
+            <div class="refresh-option-with-checkbox">
+              <input 
+                type="checkbox" 
+                :checked="isEndpointSelected('settled-cash')"
+                @change="toggleEndpointSelection('settled-cash')"
+                :disabled="isRefreshing"
+                class="refresh-checkbox"
+              />
+              <button 
+                @click="refreshData('settled-cash')" 
+                :disabled="isRefreshing"
+                class="refresh-option"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/>
+                  <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                Settled Cash<span style="font-size: 10px;">(Docker)</span>
+              </button>
+              <button 
+                class="status-arrow-btn"
+                :class="{ 'active': expandedEndpoint === 'settled-cash' }"
+                @click.stop="toggleEndpointStatus('settled-cash')"
+                title="View fetch history"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6,9 12,15 18,9"></polyline>
+                </svg>
+              </button>
+              
+              <!-- Settled Cash Fetch Status Popover -->
+              <div v-if="expandedEndpoint === 'settled-cash'" class="fetch-status-popover-container" @click.stop>
+                <FetchStatusPopover 
+                  title="Settled Cash"
+                  :data="getStatusData('settled-cash')"
+                  :accounts="accountAliases"
+                  :is-loading="isLoadingFetchStatus"
+                />
+              </div>
+            </div>
+
+
+
             <!-- Positions with click status -->
             <div class="refresh-option-with-checkbox">
               <input 
@@ -968,11 +1012,12 @@ const refreshSelectedData = async () => {
   selectedEndpoints.value.clear()
 }
 
-const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers' | 'current-delta' | 'financial-data' | 'orders' | 'today-orders-trades') => {
+const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' | 'settled-cash' | 'current-market-price' | 'trades' | 'current-margin-impact' | 'cash-transactions' | 'transfers' | 'current-delta' | 'financial-data' | 'orders' | 'today-orders-trades') => {
   const labels = {
     'positions': 'Positions',
     'maintenance-margin': 'Maintenance Margin',
     'nlv': 'Net Liquidation Value',
+    'settled-cash': 'Settled Cash',
     'current-market-price': 'Current Market Prices',
     'trades': 'Trades',
     'current-margin-impact': 'Current Margin Impact',
@@ -1044,10 +1089,11 @@ const refreshData = async (endpoint: 'positions' | 'maintenance-margin' | 'nlv' 
 }
 
 const refreshAllData = async () => {
-  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'current-market-price' | 'trades' | 'transfers' | 'cash-transactions' | 'current-margin-impact' | 'current-delta' | 'orders' | 'financial-data' | 'today-orders-trades'> = [
+  const endpoints: Array<'positions' | 'maintenance-margin' | 'nlv' | 'settled-cash' | 'current-market-price' | 'trades' | 'transfers' | 'cash-transactions' | 'current-margin-impact' | 'current-delta' | 'orders' | 'financial-data' | 'today-orders-trades'> = [
     'positions', 
     'maintenance-margin', 
     'nlv',
+    'settled-cash',
     'current-market-price',
     'trades',
     'transfers',

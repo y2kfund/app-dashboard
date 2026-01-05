@@ -24,6 +24,7 @@ export interface AccountAlias {
 const endpointToScriptType: Record<string, string> = {
   'nlv': 'nlv',
   'maintenance-margin': 'maintenance-margin',
+  'settled-cash': 'settled_cash',
   'positions': 'positions'
 }
 
