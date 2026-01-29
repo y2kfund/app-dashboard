@@ -197,7 +197,24 @@
           <button @click="showPayloadModal = false" class="close-btn">×</button>
         </div>
         <div class="modal-body">
-          <pre class="json-display">{{ selectedReport?.llm_payload }}</pre>
+          <div class="payload-section">
+            <label>Model</label>
+            <div class="payload-value tag">{{ selectedReport?.metadata?.model || 'Unknown' }}</div>
+          </div>
+
+          <div class="payload-section">
+            <label>System Instruction (Persona & Rules)</label>
+            <div class="payload-value code-block system-instruction">
+              {{ selectedReport?.metadata?.system_instruction || 'N/A' }}
+            </div>
+          </div>
+
+          <div class="payload-section">
+            <label>User Instruction (Data & Task)</label>
+            <div class="payload-value code-block">
+              {{ selectedReport?.llm_payload }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -851,16 +868,55 @@ watch(() => user.value, (newUser) => {
 }
 .btn-text:hover { color: #4338ca; }
 
-.json-display {
-  background: #1e293b;
-  color: #e2e8f0;
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.payload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.payload-section label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.payload-value.tag {
+  align-self: flex-start;
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.payload-value.code-block {
+  background: #1e1e1e; /* Dark theme for code */
+  color: #d4d4d4;
   padding: 1rem;
   border-radius: 8px;
-  overflow: auto;
-  font-family: monospace;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
   font-size: 0.85rem;
-  white-space: pre-wrap;
-  max-height: 100%;
+  line-height: 1.5;
+  white-space: pre-wrap; /* Preserve formatting */
+  overflow-x: auto;
+  border: 1px solid #374151;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.json-display {
+  display: none;
 }
 
 .modal-header {
