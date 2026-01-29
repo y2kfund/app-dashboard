@@ -9,6 +9,7 @@ const AuthCallback = () => import('../pages/AuthCallback.vue')
 const TasksApp = () => import('../pages/TasksApp.vue')
 const InstrumentDetails = () => import('../pages/InstrumentDetails.vue')
 const RiskManagement = () => import('../pages/RiskManagement.vue')
+const AnalysisApp = () => import('../pages/AnalysisApp.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,25 +25,30 @@ const router = createRouter({
       component: TasksApp,
       meta: { requiresAuth: true }
     },
-    { 
-      path: '/instrument-details/:symbolRoot', 
-      name: 'instrument-details', 
-      component: InstrumentDetails, 
+    {
+      path: '/instrument-details/:symbolRoot',
+      name: 'instrument-details',
+      component: InstrumentDetails,
       props: true
     },
-    { 
-      path: '/risk-management', 
-      name: 'risk-management', 
+    {
+      path: '/risk-management',
+      name: 'risk-management',
       component: RiskManagement
     },
-    // Catch-all fallback
-    { path: '/:pathMatch(.*)*', redirect: '/' },
+    {
+      path: '/analysis',
+      name: 'analysis',
+      component: AnalysisApp
+    },
     {
       path: '/notes/:noteId',
       name: 'notes',
       component: () => import('../pages/Notes.vue'),
       props: true
-    }
+    },
+    // Catch-all fallback must be last
+    { path: '/:pathMatch(.*)*', redirect: '/' }
   ]
 })
 
