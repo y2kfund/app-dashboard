@@ -27,8 +27,18 @@
           @click="selectReport(report.id)"
         >
           <div class="report-item-header">
-            <h4 class="report-title">{{ report.prompt_title }}</h4>
-            <span class="report-date">{{ formatDate(report.created_at) }}</span>
+            <div class="header-left">
+              <h4 class="report-title">{{ report.prompt_title }}</h4>
+            </div>
+            <div class="header-right">
+              <span class="report-date">{{ formatDate(report.created_at) }}</span>
+              <button @click.stop="deleteReport(report.id)" class="delete-report-btn" title="Delete Report">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
           </div>
           <p class="report-preview">{{ report.llm_response_summary }}</p>
         </div>
@@ -295,6 +305,31 @@ const fetchReports = async () => {
 
 const selectReport = (id: string) => {
   selectedReportId.value = id
+}
+
+const deleteReport = async (id: string) => {
+  if (!confirm('Are you sure you want to delete this report?')) return
+
+  try {
+    const { error } = await supabase
+      .schema('hf')
+      .from('ai_analysis_reports')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+
+    // Remove from local list
+    reports.value = reports.value.filter(r => r.id !== id)
+    
+    // If deleted report was selected, select the first one available or null
+    if (selectedReportId.value === id) {
+      selectedReportId.value = reports.value.length > 0 ? reports.value[0].id : null
+    }
+  } catch (err) {
+    console.error('Error deleting report:', err)
+    alert('Failed to delete report')
+  }
 }
 
 /**
@@ -644,7 +679,33 @@ watch(() => user.value, (newUser) => {
 .report-item-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 0.25rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.delete-report-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+
+.delete-report-btn:hover {
+  color: #ef4444;
+  background: #fee2e2;
 }
 
 .report-title {
@@ -652,11 +713,13 @@ watch(() => user.value, (newUser) => {
   font-size: 0.95rem;
   font-weight: 600;
   color: #111827;
+  line-height: 1.4;
 }
 
 .report-date {
   font-size: 0.75rem;
   color: #6b7280;
+  white-space: nowrap;
 }
 
 .report-preview {
