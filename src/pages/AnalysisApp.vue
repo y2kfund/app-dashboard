@@ -175,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useSupabase } from '@y2kfund/core'
 import { useAuth } from '../composables/useAuth'
 import { marked } from 'marked'
@@ -240,12 +240,15 @@ const isValidNewPrompt = computed(() => {
 })
 
 const fetchReports = async () => {
+  if (!user.value?.id) return
+
   isLoadingReports.value = true
   try {
     const { data, error } = await supabase
       .schema('hf')
       .from('ai_analysis_reports')
       .select('*')
+      .eq('created_by', user.value.id)
       .order('created_at', { ascending: false })
     
     if (error) {
@@ -275,12 +278,15 @@ const selectReport = (id: string) => {
  * Methods: Prompt Manager (CRUD)
  */
 const fetchPrompts = async () => {
+  if (!user.value?.id) return
+
   isLoadingPrompts.value = true
   try {
     const { data, error } = await supabase
       .schema('hf')
       .from('ai_analysis_prompts')
       .select('*')
+      .eq('created_by', user.value.id)
       .order('title', { ascending: true })
 
     if (error) throw error
@@ -433,10 +439,24 @@ const openNewAnalysisModal = () => {
 }
 const closeModal = () => showModal.value = false
 
+import { ref, computed, onMounted, watch } from 'vue'
+// ... (imports)
+
+// ... (rest of code)
+
 // Initial Load
 onMounted(() => {
-  fetchReports()
+  if (user.value?.id) {
+    fetchReports()
+  }
 })
+
+// Watch for auth to be ready
+watch(() => user.value, (newUser) => {
+  if (newUser?.id) {
+    fetchReports()
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>
