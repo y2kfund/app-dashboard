@@ -39,7 +39,15 @@
         <div v-if="selectedReport" class="report-detail">
           <div class="detail-header">
             <h3>{{ selectedReport.prompt_title }}</h3>
-            <span class="detail-date">{{ formatDate(selectedReport.created_at) }}</span>
+            <div class="detail-meta">
+              <span @click="showPayloadModal = true" class="btn-payload">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+              </span>
+              <span class="detail-date">{{ formatDate(selectedReport.created_at) }}</span>
+            </div>
           </div>
           <div class="detail-body" v-html="renderMarkdown(selectedReport.llm_response_content)"></div>
         </div>
@@ -171,6 +179,18 @@
         </div>
       </div>
     </div>
+    <!-- Payload Modal -->
+    <div v-if="showPayloadModal" class="modal-backdrop" @click="showPayloadModal = false">
+      <div class="modal-content modal-xl" @click.stop>
+        <div class="modal-header">
+          <h3>LLM Payload Data</h3>
+          <button @click="showPayloadModal = false" class="close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <pre class="json-display">{{ selectedReport?.llm_payload }}</pre>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -189,6 +209,7 @@ interface Report {
   created_at: string
   llm_response_summary: string
   llm_response_content: string
+  llm_payload: string
 }
 
 // ... (Report interface above)
@@ -226,6 +247,8 @@ const newPrompt = ref({
   prompt_text: '',
   schedule_time: '09:00'
 })
+
+const showPayloadModal = ref(false)
 
 const editingPromptId = ref<string | null>(null)
 const editForm = ref<Partial<AnalysisPrompt>>({})
@@ -642,6 +665,7 @@ watch(() => user.value, (newUser) => {
   color: #4b5563;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -719,6 +743,61 @@ watch(() => user.value, (newUser) => {
 .modal-lg {
   width: 900px;
   max-width: 95%;
+}
+
+.modal-xl {
+  width: 95%;
+  height: 90vh;
+}
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-payload {
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-payload:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  padding: 0;
+}
+.btn-text:hover { color: #4338ca; }
+
+.json-display {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  max-height: 100%;
 }
 
 .modal-header {
