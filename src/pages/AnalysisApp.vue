@@ -17,7 +17,7 @@
       <!-- Left Sidebar: Report List -->
       <div class="report-list">
         <div v-if="isLoadingReports" class="loading-state">Loading reports...</div>
-        <div v-else-if="reports.length === 0" class="empty-list">No reports yet</div>
+        <div v-else-if="!reports || reports.length === 0" class="empty-list">No reports yet</div>
         <div 
           v-else
           v-for="report in reports" 
@@ -178,6 +178,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSupabase } from '@y2kfund/core'
 import { useAuth } from '../composables/useAuth'
+import { marked } from 'marked'
 
 /**
  * Interfaces & Types
@@ -190,9 +191,53 @@ interface Report {
   llm_response_content: string
 }
 
-// ... (AnalysisPrompt interface unchanged)
+// ... (Report interface above)
+
+interface AnalysisPrompt {
+  id: string
+  title: string
+  prompt_text: string
+  schedule_time: string
+  is_active: boolean
+  created_by: string
+}
 
 // ...
+
+// ...
+
+const { user } = useAuth()
+const supabase = useSupabase()
+
+/**
+ * State
+ */
+const reports = ref<Report[]>([])
+const selectedReportId = ref<string | null>(null)
+const isLoadingReports = ref(false)
+
+const prompts = ref<AnalysisPrompt[]>([])
+const isLoadingPrompts = ref(false)
+const showModal = ref(false)
+const isSaving = ref(false)
+
+const newPrompt = ref({
+  title: '',
+  prompt_text: '',
+  schedule_time: '09:00'
+})
+
+const editingPromptId = ref<string | null>(null)
+const editForm = ref<Partial<AnalysisPrompt>>({})
+
+const selectedReport = computed(() => 
+  reports.value.find(r => r.id === selectedReportId.value)
+)
+
+const isValidNewPrompt = computed(() => {
+  return newPrompt.value.title.trim().length > 0 && 
+         newPrompt.value.prompt_text.trim().length > 0
+})
 
 const fetchReports = async () => {
   isLoadingReports.value = true
@@ -211,7 +256,7 @@ const fetchReports = async () => {
       }
     } else {
       reports.value = data || []
-      if (reports.value.length > 0 && !selectedReportId.value) {
+      if (reports.value && reports.value.length > 0 && !selectedReportId.value) {
         selectedReportId.value = reports.value[0].id
       }
     }
@@ -372,7 +417,15 @@ const formatTime = (timeString: string) => {
   return timeString ? timeString.substring(0, 5) : ''
 }
 
-const renderMarkdown = (content: string) => content
+const renderMarkdown = (content: string) => {
+  if (!content) return ''
+  try {
+    return marked.parse(content)
+  } catch (e) {
+    console.error('Markdown rendering error:', e)
+    return content
+  }
+}
 
 const openNewAnalysisModal = () => {
   showModal.value = true
@@ -385,6 +438,86 @@ onMounted(() => {
   fetchReports()
 })
 </script>
+
+<style scoped>
+/* Markdown Content Styling */
+:deep(.detail-body) {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #374151;
+  line-height: 1.6;
+}
+
+:deep(.detail-body h1), :deep(.detail-body h2), :deep(.detail-body h3) {
+  color: #111827;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+:deep(.detail-body h1) { font-size: 1.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
+:deep(.detail-body h2) { font-size: 1.25rem; }
+:deep(.detail-body h3) { font-size: 1.1rem; }
+
+:deep(.detail-body p) {
+  margin-bottom: 1rem;
+}
+
+:deep(.detail-body ul), :deep(.detail-body ol) {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+:deep(.detail-body li) {
+  margin-bottom: 0.25rem;
+}
+
+:deep(.detail-body strong) {
+  color: #000;
+  font-weight: 600;
+}
+
+:deep(.detail-body pre) {
+  background: #f3f4f6;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+:deep(.detail-body code) {
+  background: #f3f4f6;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: monospace;
+}
+
+:deep(.detail-body blockquote) {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  margin-left: 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+:deep(.detail-body table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+:deep(.detail-body th), :deep(.detail-body td) {
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+:deep(.detail-body th) {
+  background: #f9fafb;
+  font-weight: 600;
+}
+</style>
 
 <style scoped>
 .analysis-page {
