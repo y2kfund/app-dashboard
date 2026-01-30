@@ -91,7 +91,7 @@
           <div class="add-prompt-section">
             <h4>Add New Prompt</h4>
             <div class="form-grid">
-              <div class="form-group">
+              <div class="form-group full-width relative">
                 <label>Title</label>
                 <input v-model="newPrompt.title" type="text" placeholder="e.g. Daily Risk Check" />
               </div>
@@ -99,6 +99,40 @@
                 <label>Schedule Time (UTC)</label>
                 <input v-model="newPrompt.schedule_time" type="time" />
               </div>
+              
+              <div class="form-group relative">
+                <label>Days to Run</label>
+                <div class="custom-select-trigger" @click="showNewPromptDayDropdown = !showNewPromptDayDropdown">
+                   {{ formatDays(newPrompt.schedule_days) }}
+                   <span class="arrow">▼</span>
+                </div>
+                
+                <div v-if="showNewPromptDayDropdown" class="custom-select-dropdown">
+                  <!-- All Days Option -->
+                  <label class="dropdown-item special">
+                    <input 
+                      type="checkbox" 
+                      class="days-checkbox"
+                      :checked="isAllSelected(newPrompt.schedule_days)" 
+                      @change="toggleAllDays(newPrompt, $event)"
+                    />
+                    <span>All Days</span>
+                  </label>
+                  <div class="dropdown-divider"></div>
+                  <!-- Individual Days -->
+                  <label v-for="day in availableDays" :key="day.value" class="dropdown-item">
+                    <input 
+                      type="checkbox" 
+                      class="days-checkbox"
+                      :value="day.value" 
+                      :checked="isDaySelected(newPrompt.schedule_days, day.value)"
+                      @change="toggleIndividualDay(newPrompt, day.value)"
+                    />
+                    <span>{{ day.label }}</span>
+                  </label>
+                </div>
+              </div>
+
               <div class="form-group full-width">
                 <label>Prompt Template</label>
                 <textarea v-model="newPrompt.prompt_text" rows="4" placeholder="Enter system instructions..."></textarea>
@@ -126,7 +160,7 @@
                     <th style="width: 40px">Active</th>
                     <th style="width: 200px">Title</th>
                     <th>Prompt</th>
-                    <th style="width: 100px">Time</th>
+                    <th style="width: 150px">Schedule</th>
                     <th style="width: 60px"></th>
                   </tr>
                 </thead>
@@ -161,13 +195,38 @@
                       <span v-else class="text-display truncate" @click="startEdit(prompt)" :title="prompt.prompt_text">{{ prompt.prompt_text }}</span>
                     </td>
                     <td>
-                      <input 
-                        v-if="editingPromptId === prompt.id" 
-                        v-model="editForm.schedule_time" 
-                        type="time"
-                        class="inline-input"
-                      />
-                      <span v-else class="text-display" @click="startEdit(prompt)">{{ formatTime(prompt.schedule_time) }}</span>
+                      <div v-if="editingPromptId === prompt.id" class="edit-schedule relative">
+                         <input v-model="editForm.schedule_time" type="time" class="inline-input mb-1" />
+                         
+                         <div class="custom-select-trigger small" @click="showEditPromptDayDropdown = !showEditPromptDayDropdown">
+                           {{ formatDays(editForm.schedule_days) }}
+                         </div>
+
+                         <div v-if="showEditPromptDayDropdown" class="custom-select-dropdown small">
+                            <label class="dropdown-item special">
+                              <input 
+                                type="checkbox" 
+                                :checked="isAllSelected(editForm.schedule_days)" 
+                                @change="toggleAllDays(editForm, $event)"
+                              />
+                              <span>All Days</span>
+                            </label>
+                            <div class="dropdown-divider"></div>
+                            <label v-for="day in availableDays" :key="day.value" class="dropdown-item">
+                              <input 
+                                type="checkbox" 
+                                :value="day.value" 
+                                :checked="isDaySelected(editForm.schedule_days, day.value)"
+                                @change="toggleIndividualDay(editForm, day.value)"
+                              />
+                              <span>{{ day.label }}</span>
+                            </label>
+                         </div>
+                      </div>
+                      <div v-else class="text-display" @click="startEdit(prompt)">
+                        <div>{{ formatTime(prompt.schedule_time) }}</div>
+                        <div class="days-badge">{{ formatDays(prompt.schedule_days) }}</div>
+                      </div>
                     </td>
                     <td class="actions-cell">
                       <div v-if="editingPromptId === prompt.id" class="edit-actions">
@@ -250,6 +309,7 @@ interface AnalysisPrompt {
   title: string
   prompt_text: string
   schedule_time: string
+  schedule_days: string[] // Added
   is_active: boolean
   created_by: string
 }
@@ -273,10 +333,21 @@ const isLoadingPrompts = ref(false)
 const showModal = ref(false)
 const isSaving = ref(false)
 
+const availableDays = [
+  { label: 'Mon', value: 'Mon' },
+  { label: 'Tue', value: 'Tue' },
+  { label: 'Wed', value: 'Wed' },
+  { label: 'Thu', value: 'Thu' },
+  { label: 'Fri', value: 'Fri' },
+  { label: 'Sat', value: 'Sat' },
+  { label: 'Sun', value: 'Sun' }
+]
+
 const newPrompt = ref({
   title: '',
   prompt_text: '',
-  schedule_time: '09:00'
+  schedule_time: '09:00',
+  schedule_days: ['All'] as string[]
 })
 
 const showPayloadModal = ref(false)
@@ -284,9 +355,65 @@ const showPayloadModal = ref(false)
 const editingPromptId = ref<string | null>(null)
 const editForm = ref<Partial<AnalysisPrompt>>({})
 
+const showNewPromptDayDropdown = ref(false)
+const showEditPromptDayDropdown = ref(false)
+
+// Dropdown Logic
+const isAllSelected = (currentDays: string[] | undefined) => {
+  if (!currentDays) return false
+  return currentDays.includes('All') || currentDays.length === 7
+}
+
+const isDaySelected = (currentDays: string[] | undefined, day: string) => {
+  if (!currentDays) return false
+  if (currentDays.includes('All')) return true
+  return currentDays.includes(day)
+}
+
+const toggleAllDays = (targetObj: any, event: Event) => {
+  const isChecked = (event.target as HTMLInputElement).checked
+  if (isChecked) {
+    targetObj.schedule_days = ['All']
+  } else {
+    targetObj.schedule_days = []
+  }
+}
+
+const toggleIndividualDay = (targetObj: any, day: string) => {
+  let days = targetObj.schedule_days || []
+  
+  // If currently 'All', expand it to all 7 days first, then toggle the specific one
+  if (days.includes('All')) {
+    days = availableDays.map(d => d.value)
+  }
+
+  if (days.includes(day)) {
+    days = days.filter(d => d !== day)
+  } else {
+    days.push(day)
+  }
+
+  // If now all 7 are selected, convert back to 'All'
+  if (days.length === 7) {
+    days = ['All']
+  }
+
+  // If empty, keep empty (user must explicitly select at least one effectively, but empty is allowed as "runs never")
+  
+  targetObj.schedule_days = days
+}
+
 const selectedReport = computed(() => 
   reports.value.find(r => r.id === selectedReportId.value)
 )
+
+// Helpers
+const formatDays = (days: string[] | undefined) => {
+  if (!days || days.length === 0 || (days.length === 1 && days[0] === 'All')) {
+    return 'Every Day'
+  }
+  return days.join(', ')
+}
 
 const groupedReports = computed(() => {
   const groups: Record<string, Report[]> = {}
@@ -404,6 +531,9 @@ const addPrompt = async () => {
     title: newPrompt.value.title,
     prompt_text: newPrompt.value.prompt_text,
     schedule_time: newPrompt.value.schedule_time,
+    schedule_days: newPrompt.value.schedule_days && newPrompt.value.schedule_days.length > 0 
+      ? newPrompt.value.schedule_days 
+      : ['All'],
     created_by: user.value.id,
     is_active: true
   }
@@ -489,7 +619,10 @@ const saveEdit = async (id: string) => {
       .update({
         title: editForm.value.title,
         prompt_text: editForm.value.prompt_text,
-        schedule_time: editForm.value.schedule_time
+        schedule_time: editForm.value.schedule_time,
+        schedule_days: editForm.value.schedule_days && editForm.value.schedule_days.length > 0 
+          ? editForm.value.schedule_days 
+          : ['All']
       })
       .eq('id', id)
 
@@ -565,7 +698,101 @@ watch(() => user.value, (newUser) => {
 </script>
 
 <style scoped>
-/* Markdown Content Styling */
+/* Markdown*/
+/* Custom Select Dropdown */
+.relative { position: relative; }
+
+.custom-select-trigger {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  min-height: 38px;
+}
+.custom-select-trigger.small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  min-height: 28px;
+}
+.custom-select-trigger:hover {
+  border-color: #9ca3af;
+}
+
+.custom-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  margin-top: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.custom-select-dropdown.small {
+  width: 200px; /* Fixed width for the mini editor */
+}
+
+.dropdown-item {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #374151;
+  gap: 0.75rem;
+  text-align: left;
+}
+.dropdown-item input {
+  margin: 0;
+  flex-shrink: 0;
+  width: 14px;
+}
+.dropdown-item span {
+  flex-grow: 0;
+  white-space: nowrap;
+}
+.dropdown-item:hover {
+  background: #f3f4f6;
+}
+.dropdown-item.special {
+  font-weight: 600;
+  color: #111827;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
+
+.arrow {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+
+.days-badge {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+  background: #f3f4f6;
+  padding: 0 4px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Scrollbar styling */
 :deep(.detail-body) {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: #374151;
@@ -1024,7 +1251,6 @@ watch(() => user.value, (newUser) => {
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 0.9rem;
-  width: 100%;
 }
 .form-group textarea {
   resize: vertical;
@@ -1182,5 +1408,13 @@ input:checked + .slider:before {
 .edit-actions, .row-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+
+.days-checkbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 </style>
