@@ -18,30 +18,34 @@
       <div class="report-list">
         <div v-if="isLoadingReports" class="loading-state">Loading reports...</div>
         <div v-else-if="!reports || reports.length === 0" class="empty-list">No reports yet</div>
-        <div 
-          v-else
-          v-for="report in reports" 
-          :key="report.id" 
-          class="report-item" 
-          :class="{ active: selectedReportId === report.id }"
-          @click="selectReport(report.id)"
-        >
-          <div class="report-item-header">
-            <div class="header-left">
-              <h4 class="report-title">{{ report.prompt_title }}</h4>
-            </div>
-            <div class="header-right">
-              <span class="report-date">{{ formatDate(report.created_at) }}</span>
-              <button @click.stop="deleteReport(report.id)" class="delete-report-btn" title="Delete Report">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-              </button>
+        <template v-else>
+          <div v-for="(group, dateKey) in groupedReports" :key="dateKey" class="report-group">
+            <div class="group-header">-- {{ dateKey }} --</div>
+            <div 
+              v-for="report in group" 
+              :key="report.id" 
+              class="report-item" 
+              :class="{ active: selectedReportId === report.id }"
+              @click="selectReport(report.id)"
+            >
+              <div class="report-item-header">
+                <div class="header-left">
+                  <h4 class="report-title">{{ report.prompt_title }}</h4>
+                </div>
+                <div class="header-right">
+                  <span class="report-date">{{ formatTimeOnly(report.created_at) }}</span>
+                  <button @click.stop="deleteReport(report.id)" class="delete-report-btn" title="Delete Report">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <p class="report-preview">{{ report.llm_response_summary }}</p>
             </div>
           </div>
-          <p class="report-preview">{{ report.llm_response_summary }}</p>
-        </div>
+        </template>
       </div>
 
       <!-- Right Content: Detailed Report -->
@@ -284,6 +288,26 @@ const selectedReport = computed(() =>
   reports.value.find(r => r.id === selectedReportId.value)
 )
 
+const groupedReports = computed(() => {
+  const groups: Record<string, Report[]> = {}
+  
+  reports.value.forEach(report => {
+    const date = new Date(report.created_at)
+    // Use UTC to prevent date shifting
+    const dateKey = date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric'
+    }) // e.g., "Jan 28"
+    
+    if (!groups[dateKey]) {
+      groups[dateKey] = []
+    }
+    groups[dateKey].push(report)
+  })
+  
+  return groups
+})
+
 const isValidNewPrompt = computed(() => {
   return newPrompt.value.title.trim().length > 0 && 
          newPrompt.value.prompt_text.trim().length > 0
@@ -493,6 +517,12 @@ const formatDate = (dateString: string) => {
   })
 }
 
+const formatTimeOnly = (dateString: string) => {
+  return new Date(dateString).toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit'
+  })
+}
+
 const formatTime = (timeString: string) => {
   // Simple check to remove seconds if cleaner
   return timeString ? timeString.substring(0, 5) : ''
@@ -677,11 +707,36 @@ watch(() => user.value, (newUser) => {
   background: #f9fafb;
 }
 
+.empty-list {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.report-group {
+  margin-bottom: 0.5rem;
+}
+
+.group-header {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #f9fafb;
+  text-align: center;
+  border-bottom: 1px solid #f3f4f6;
+  border-top: 1px solid #f3f4f6;
+  margin-bottom: 0;
+}
+
 .report-item {
   padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #f3f4f6;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .report-item:hover {
