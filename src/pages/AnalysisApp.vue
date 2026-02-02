@@ -160,7 +160,7 @@
                     <th style="width: 40px">Active</th>
                     <th style="width: 200px">Title</th>
                     <th>Prompt</th>
-                    <th style="width: 150px">Schedule</th>
+                    <th style="width: 150px">Schedule (UTC)</th>
                     <th style="width: 60px"></th>
                   </tr>
                 </thead>
@@ -346,7 +346,7 @@ const availableDays = [
 const newPrompt = ref({
   title: '',
   prompt_text: '',
-  schedule_time: '09:00',
+  schedule_time: '14:30',
   schedule_days: ['All'] as string[]
 })
 
