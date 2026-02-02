@@ -8,7 +8,7 @@
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          Add Prompt
+          Manage Prompts
         </button>
       </div>
     </div>
@@ -473,6 +473,12 @@ const fetchReports = async () => {
 
 const selectReport = (id: string) => {
   selectedReportId.value = id
+  
+  // Update browser tab title with report name
+  const report = reports.value.find(r => r.id === id)
+  if (report?.prompt_title) {
+    document.title = `${report.prompt_title} | AI Analysis Reports`
+  }
 }
 
 const deleteReport = async (id: string) => {
@@ -677,7 +683,7 @@ const openNewAnalysisModal = () => {
 }
 const closeModal = () => showModal.value = false
 
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 // ... (imports)
 
 // ... (rest of code)
@@ -695,6 +701,11 @@ watch(() => user.value, (newUser) => {
     fetchReports()
   }
 }, { immediate: true })
+
+// Reset title when leaving page
+onUnmounted(() => {
+  document.title = 'Dashboard'
+})
 </script>
 
 <style scoped>
