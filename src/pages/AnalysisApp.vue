@@ -96,7 +96,7 @@
                 <input v-model="newPrompt.title" type="text" placeholder="e.g. Daily Risk Check" />
               </div>
               <div class="form-group">
-                <label>Schedule Time (UTC)</label>
+                <label>Schedule Time (UTC)<small> [Note: New York Stock Exchange opens at 02:30 pm UTC]</small></label>
                 <input v-model="newPrompt.schedule_time" type="time" />
               </div>
               
@@ -392,7 +392,7 @@ const availableDays = [
 const newPrompt = ref({
   title: '',
   prompt_text: '',
-  schedule_time: '14:30',
+  schedule_time: '14:35',
   schedule_days: ['All'] as string[],
   email_notification: true
 })
