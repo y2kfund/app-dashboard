@@ -150,7 +150,7 @@
 
               <div class="form-group full-width">
                 <label>Prompt Template</label>
-                <textarea v-model="newPrompt.prompt_text" rows="4" placeholder="Enter system instructions..."></textarea>
+                <textarea v-model="newPrompt.prompt_text" rows="8" placeholder="Enter system instructions..."></textarea>
               </div>
               <div class="form-actions">
                 <button @click="addPrompt" :disabled="isSaving || !isValidNewPrompt" class="btn-primary btn-sm">
@@ -176,6 +176,7 @@
                     <th style="width: 200px">Title</th>
                     <th>Prompt</th>
                     <th style="width: 150px">Schedule (UTC)</th>
+                    <th style="width: 60px">Email</th>
                     <th style="width: 60px"></th>
                   </tr>
                 </thead>
@@ -205,7 +206,7 @@
                         v-if="editingPromptId === prompt.id" 
                         v-model="editForm.prompt_text" 
                         class="inline-input"
-                        rows="6"
+                        rows="11"
                       ></textarea>
                       <span v-else class="text-display truncate" @click="startEdit(prompt)" :title="prompt.prompt_text">{{ prompt.prompt_text }}</span>
                     </td>
@@ -241,6 +242,23 @@
                       <div v-else class="text-display" @click="startEdit(prompt)">
                         <div>{{ formatTime(prompt.schedule_time) }}</div>
                         <div class="days-badge">{{ formatDays(prompt.schedule_days) }}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <!-- Email Notification Toggle (Edit Mode) -->
+                      <div v-if="editingPromptId === prompt.id">
+                        <label class="switch">
+                          <input 
+                            type="checkbox" 
+                            v-model="editForm.email_notification"
+                          >
+                          <span class="slider round"></span>
+                        </label>
+                      </div>
+                      <div v-else class="text-display" @click="startEdit(prompt)">
+                        <span :class="['email-badge', prompt.email_notification ? 'on' : 'off']">
+                          {{ prompt.email_notification ? 'On' : 'Off' }}
+                        </span>
                       </div>
                     </td>
                     <td class="actions-cell">
@@ -337,6 +355,7 @@ interface AnalysisPrompt {
   prompt_text: string
   schedule_time: string
   schedule_days: string[] // Added
+  email_notification: boolean
   is_active: boolean
   created_by: string
 }
@@ -670,7 +689,8 @@ const saveEdit = async (id: string) => {
         schedule_time: editForm.value.schedule_time,
         schedule_days: editForm.value.schedule_days && editForm.value.schedule_days.length > 0 
           ? editForm.value.schedule_days 
-          : ['All']
+          : ['All'],
+        email_notification: editForm.value.email_notification ?? true
       })
       .eq('id', id)
 
@@ -1260,7 +1280,7 @@ onUnmounted(() => {
 }
 
 .modal-lg {
-  width: 900px;
+  width: 1200px;
   max-width: 95%;
 }
 
@@ -1313,7 +1333,6 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
 }
 
 .payload-section {
@@ -1384,7 +1403,6 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-bottom: 1rem;
 }
 
 .form-group {
