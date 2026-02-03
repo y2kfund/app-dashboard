@@ -293,22 +293,30 @@
           <button @click="showPayloadModal = false" class="close-btn">×</button>
         </div>
         <div class="modal-body">
+          <!-- Model Section (always visible, small) -->
           <div class="payload-section">
             <label>Model</label>
             <div class="payload-value tag">{{ selectedReport?.metadata?.model || 'Unknown' }}</div>
           </div>
 
-          <div class="payload-section">
-            <label>System Instruction (Persona & Rules)</label>
-            <div class="payload-value code-block system-instruction">
+          <!-- System Instruction (Collapsible) -->
+          <div class="payload-section collapsible">
+            <div class="section-header" @click="expandedSections.system = !expandedSections.system">
+              <label>System Instruction (Persona & Rules)</label>
+              <span class="chevron" :class="{ expanded: expandedSections.system }">▶</span>
+            </div>
+            <div v-show="expandedSections.system" class="payload-value code-block system-instruction">
               {{ selectedReport?.metadata?.system_instruction || 'N/A' }}
             </div>
           </div>
 
-          <div class="payload-section">
-            <label>User Instruction (Data & Task)</label>
-            <div class="payload-value code-block">
-              {{ selectedReport?.llm_payload }}
+          <!-- User Instruction (Collapsible) -->
+          <div class="payload-section collapsible">
+            <div class="section-header" @click="expandedSections.user = !expandedSections.user">
+              <label>User Instruction (Data & Task)</label>
+              <span class="chevron" :class="{ expanded: expandedSections.user }">▶</span>
+            </div>
+            <div v-show="expandedSections.user" class="payload-value code-block markdown-content" v-html="renderMarkdown(selectedReport?.llm_payload || '')">
             </div>
           </div>
         </div>
@@ -398,6 +406,10 @@ const newPrompt = ref({
 })
 
 const showPayloadModal = ref(false)
+const expandedSections = ref({
+  system: false,
+  user: false
+})
 
 const editingPromptId = ref<string | null>(null)
 const editForm = ref<Partial<AnalysisPrompt>>({})
@@ -1341,6 +1353,47 @@ onUnmounted(() => {
   gap: 0.5rem;
 }
 
+.payload-section.collapsible {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.payload-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: #f9fafb;
+  transition: background 0.15s ease;
+}
+
+.payload-section .section-header:hover {
+  background: #f3f4f6;
+}
+
+.payload-section .section-header label {
+  cursor: pointer;
+  margin: 0;
+}
+
+.payload-section .chevron {
+  font-size: 0.75rem;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.payload-section .chevron.expanded {
+  transform: rotate(90deg);
+}
+
+.payload-section.collapsible .payload-value {
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0;
+}
+
 .payload-section label {
   font-size: 0.85rem;
   font-weight: 600;
@@ -1360,17 +1413,65 @@ onUnmounted(() => {
 }
 
 .payload-value.code-block {
-  background: #1e1e1e; /* Dark theme for code */
-  color: #d4d4d4;
+  background: #f0f9ff; /* Light powder blue */
+  color: #1e293b;
   padding: 1rem;
   border-radius: 8px;
   font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
   font-size: 0.85rem;
-  line-height: 1.5;
+  line-height: 1.6;
   white-space: pre-wrap; /* Preserve formatting */
   overflow-x: auto;
-  border: 1px solid #374151;
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid #bae6fd;
+}
+
+/* Markdown content styling inside code blocks */
+.payload-value.markdown-content {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  white-space: normal;
+}
+
+.payload-value.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 0.85rem;
+}
+
+.payload-value.markdown-content th {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #bae6fd;
+}
+
+.payload-value.markdown-content td {
+  padding: 8px 12px;
+  border: 1px solid #bae6fd;
+  vertical-align: top;
+}
+
+.payload-value.markdown-content tr:nth-child(even) {
+  background: #e0f2fe;
+}
+
+.payload-value.markdown-content strong {
+  color: #0c4a6e;
+}
+
+.payload-value.markdown-content code {
+  background: #e0f2fe;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.payload-value.markdown-content hr {
+  border: none;
+  border-top: 1px solid #bae6fd;
+  margin: 1.5em 0;
 }
 
 .json-display {
