@@ -37,9 +37,10 @@ const router = createRouter({
       component: RiskManagement
     },
     {
-      path: '/analysis',
+      path: '/analysis/:reportId?/:promptTitle?/:createdAt?',
       name: 'analysis',
-      component: AnalysisApp
+      component: AnalysisApp,
+      props: true
     },
     {
       path: '/notes/:noteId',

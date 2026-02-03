@@ -100,36 +100,51 @@
                 <input v-model="newPrompt.schedule_time" type="time" />
               </div>
               
-              <div class="form-group relative">
-                <label>Days to Run</label>
-                <div class="custom-select-trigger" @click="showNewPromptDayDropdown = !showNewPromptDayDropdown">
-                   {{ formatDays(newPrompt.schedule_days) }}
-                   <span class="arrow">▼</span>
+              <div class="form-row-flex">
+                <!-- Days to Run -->
+                <div class="form-group relative">
+                  <label>Days to Run</label>
+                  <div class="custom-select-trigger" @click="showNewPromptDayDropdown = !showNewPromptDayDropdown">
+                     {{ formatDays(newPrompt.schedule_days) }}
+                     <span class="arrow">▼</span>
+                  </div>
+                  
+                  <div v-if="showNewPromptDayDropdown" class="custom-select-dropdown">
+                    <!-- All Days Option -->
+                    <label class="dropdown-item special">
+                      <input 
+                        type="checkbox" 
+                        class="days-checkbox"
+                        :checked="isAllSelected(newPrompt.schedule_days)" 
+                        @change="toggleAllDays(newPrompt, $event)"
+                      />
+                      <span>All Days</span>
+                    </label>
+                    <div class="dropdown-divider"></div>
+                    <!-- Individual Days -->
+                    <label v-for="day in availableDays" :key="day.value" class="dropdown-item">
+                      <input 
+                        type="checkbox" 
+                        class="days-checkbox"
+                        :value="day.value" 
+                        :checked="isDaySelected(newPrompt.schedule_days, day.value)"
+                        @change="toggleIndividualDay(newPrompt, day.value)"
+                      />
+                      <span>{{ day.label }}</span>
+                    </label>
+                  </div>
                 </div>
-                
-                <div v-if="showNewPromptDayDropdown" class="custom-select-dropdown">
-                  <!-- All Days Option -->
-                  <label class="dropdown-item special">
-                    <input 
-                      type="checkbox" 
-                      class="days-checkbox"
-                      :checked="isAllSelected(newPrompt.schedule_days)" 
-                      @change="toggleAllDays(newPrompt, $event)"
-                    />
-                    <span>All Days</span>
-                  </label>
-                  <div class="dropdown-divider"></div>
-                  <!-- Individual Days -->
-                  <label v-for="day in availableDays" :key="day.value" class="dropdown-item">
-                    <input 
-                      type="checkbox" 
-                      class="days-checkbox"
-                      :value="day.value" 
-                      :checked="isDaySelected(newPrompt.schedule_days, day.value)"
-                      @change="toggleIndividualDay(newPrompt, day.value)"
-                    />
-                    <span>{{ day.label }}</span>
-                  </label>
+
+                <!-- Email Notification -->
+                <div class="form-group">
+                  <label>Email Notification</label>
+                  <div class="toggle-row">
+                    <label class="toggle-switch">
+                      <input type="checkbox" v-model="newPrompt.email_notification" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">{{ newPrompt.email_notification ? 'On' : 'Off' }}</span>
+                  </div>
                 </div>
               </div>
 
@@ -286,9 +301,21 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useSupabase } from '@y2kfund/core'
 import { useAuth } from '../composables/useAuth'
 import { marked } from 'marked'
+
+// Router for URL management
+const router = useRouter()
+const route = useRoute()
+
+// Props from route params (for direct URL navigation)
+const props = defineProps<{
+  reportId?: string
+  promptTitle?: string
+  createdAt?: string
+}>()
 
 /**
  * Interfaces & Types
@@ -347,7 +374,8 @@ const newPrompt = ref({
   title: '',
   prompt_text: '',
   schedule_time: '14:30',
-  schedule_days: ['All'] as string[]
+  schedule_days: ['All'] as string[],
+  email_notification: true
 })
 
 const showPayloadModal = ref(false)
@@ -478,6 +506,19 @@ const selectReport = (id: string) => {
   const report = reports.value.find(r => r.id === id)
   if (report?.prompt_title) {
     document.title = `${report.prompt_title} | AI Analysis Reports`
+    
+    // Update URL with report details (date only, no time)
+    const createdDate = new Date(report.created_at).toISOString().split('T')[0] // e.g., 2026-02-02
+    const slugTitle = report.prompt_title.replace(/\s+/g, '-').toLowerCase()
+    
+    router.replace({
+      name: 'analysis',
+      params: {
+        reportId: report.id,
+        promptTitle: slugTitle,
+        createdAt: createdDate
+      }
+    })
   }
 }
 
@@ -540,6 +581,7 @@ const addPrompt = async () => {
     schedule_days: newPrompt.value.schedule_days && newPrompt.value.schedule_days.length > 0 
       ? newPrompt.value.schedule_days 
       : ['All'],
+    email_notification: newPrompt.value.email_notification ?? true,
     created_by: user.value.id,
     is_active: true
   }
@@ -558,7 +600,7 @@ const addPrompt = async () => {
     // Add to list and reset form
     if (data && data[0]) {
       prompts.value.push(data[0])
-      newPrompt.value = { title: '', prompt_text: '', schedule_time: '09:00' }
+      newPrompt.value = { title: '', prompt_text: '', schedule_time: '09:00', schedule_days: ['All'], email_notification: true }
     }
   } catch (err) {
     console.error('Error saving prompt:', err)
@@ -695,10 +737,43 @@ onMounted(() => {
   }
 })
 
-// Watch for auth to be ready
-watch(() => user.value, (newUser) => {
+// Watch for auth to be ready and handle URL params
+watch(() => user.value, async (newUser) => {
   if (newUser?.id) {
-    fetchReports()
+    await fetchReports()
+    
+    // If reportId is in URL params (from props), select that report
+    if (props.reportId) {
+      let report = reports.value.find(r => r.id === props.reportId)
+      
+      // If report not in user's list, fetch it by ID (shared report from another user)
+      if (!report) {
+        try {
+          const { data, error } = await supabase
+            .schema('hf')
+            .from('ai_analysis_reports')
+            .select('*')
+            .eq('id', props.reportId)
+            .single()
+          
+          if (!error && data) {
+            // Add the shared report to the list for display
+            reports.value.unshift(data)
+            report = data
+          }
+        } catch (err) {
+          console.error('Error fetching shared report:', err)
+        }
+      }
+      
+      // Select the report if found
+      if (report) {
+        selectedReportId.value = props.reportId
+        if (report.prompt_title) {
+          document.title = `${report.prompt_title} | AI Analysis Reports`
+        }
+      }
+    }
   }
 }, { immediate: true })
 
@@ -789,6 +864,77 @@ onUnmounted(() => {
 
 .arrow {
   font-size: 0.7rem;
+  color: #6b7280;
+}
+
+/* Form Row Flex - for horizontal alignment */
+.form-row-flex {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+}
+.form-row-flex .form-group {
+  flex: 1;
+  min-width: 0;
+}
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+/* Toggle Switch */
+.toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toggle-group label:first-child {
+  min-width: 120px;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #10b981;
+}
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+.toggle-label {
+  font-size: 0.85rem;
   color: #6b7280;
 }
 
