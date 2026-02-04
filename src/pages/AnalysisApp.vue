@@ -85,200 +85,189 @@
           <h3>Configure Analysis & Prompts</h3>
           <button @click="closeModal" class="close-btn">×</button>
         </div>
-        <div class="modal-body">
-          
-          <!-- Add New Prompt Form -->
-          <div class="add-prompt-section">
-            <h4>Add New Prompt</h4>
-            <div class="form-grid">
-              <div class="form-group full-width relative">
-                <label>Title</label>
-                <input v-model="newPrompt.title" type="text" placeholder="e.g. Daily Risk Check" />
+        <div class="modal-body prompt-manager-layout">
+          <!-- LEFT PANEL: Add Form + Prompts List -->
+          <div class="prompts-list-panel" :class="{ 'shrunk': editingPromptId }">
+            
+            <!-- Add New Prompt Form (collapses when editing) -->
+            <div class="add-prompt-section" :class="{ 'collapsed': editingPromptId }">
+              <h4>Add New Prompt</h4>
+              <div v-if="!editingPromptId" class="form-grid">
+                <div class="form-group full-width relative">
+                  <label>Title</label>
+                  <input v-model="newPrompt.title" type="text" placeholder="e.g. Daily Risk Check" />
+                </div>
+                <div class="form-group">
+                  <label>Schedule Time (UTC)<small> [Note: NYSE opens at 02:30 pm UTC]</small></label>
+                  <input v-model="newPrompt.schedule_time" type="time" />
+                </div>
+                
+                <div class="form-row-flex">
+                  <!-- Days to Run -->
+                  <div class="form-group relative">
+                    <label>Days to Run</label>
+                    <div class="custom-select-trigger" @click="showNewPromptDayDropdown = !showNewPromptDayDropdown">
+                       {{ formatDays(newPrompt.schedule_days) }}
+                       <span class="arrow">▼</span>
+                    </div>
+                    
+                    <div v-if="showNewPromptDayDropdown" class="custom-select-dropdown">
+                      <label class="dropdown-item special">
+                        <input 
+                          type="checkbox" 
+                          class="days-checkbox"
+                          :checked="isAllSelected(newPrompt.schedule_days)" 
+                          @change="toggleAllDays(newPrompt, $event)"
+                        />
+                        <span>All Days</span>
+                      </label>
+                      <div class="dropdown-divider"></div>
+                      <label v-for="day in availableDays" :key="day.value" class="dropdown-item">
+                        <input 
+                          type="checkbox" 
+                          class="days-checkbox"
+                          :value="day.value" 
+                          :checked="isDaySelected(newPrompt.schedule_days, day.value)"
+                          @change="toggleIndividualDay(newPrompt, day.value)"
+                        />
+                        <span>{{ day.label }}</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Email Notification -->
+                  <div class="form-group">
+                    <label>Email Notification</label>
+                    <div class="toggle-row">
+                      <label class="toggle-switch">
+                        <input type="checkbox" v-model="newPrompt.email_notification" />
+                        <span class="toggle-slider"></span>
+                      </label>
+                      <span class="toggle-label">{{ newPrompt.email_notification ? 'On' : 'Off' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group full-width">
+                  <label>Prompt Template</label>
+                  <textarea v-model="newPrompt.prompt_text" rows="20" placeholder="Enter system instructions..."></textarea>
+                </div>
+                <div class="form-actions">
+                  <button @click="addPrompt" :disabled="isSaving || !isValidNewPrompt" class="btn-primary btn-sm">
+                    {{ isSaving ? 'Saving...' : 'Save Prompt' }}
+                  </button>
+                </div>
               </div>
-              <div class="form-group">
-                <label>Schedule Time (UTC)<small> [Note: New York Stock Exchange opens at 02:30 pm UTC]</small></label>
-                <input v-model="newPrompt.schedule_time" type="time" />
-              </div>
+            </div>
+
+            <div v-if="!editingPromptId" class="divider"></div>
+
+            <!-- Existing Prompts List (Simplified when editing) -->
+            <div class="existing-prompts-section">
+              <h4>Existing Prompts</h4>
+              <div v-if="isLoadingPrompts" class="loading-state">Loading prompts...</div>
+              <div v-else-if="prompts.length === 0" class="empty-list">No prompts configured</div>
               
-              <div class="form-row-flex">
-                <!-- Days to Run -->
+              <div v-else class="prompts-list">
+                <div 
+                  v-for="prompt in prompts" 
+                  :key="prompt.id" 
+                  class="prompt-list-item"
+                  :class="{ 'active': editingPromptId === prompt.id }"
+                  @click="startEdit(prompt)"
+                >
+                  <div class="prompt-item-content">
+                    <label class="switch" @click.stop>
+                      <input 
+                        type="checkbox" 
+                        :checked="prompt.is_active" 
+                        @change="togglePromptActive(prompt)"
+                      >
+                      <span class="slider round"></span>
+                    </label>
+                    <div class="prompt-item-info">
+                      <span class="prompt-item-title">{{ prompt.title }}</span>
+                      <span class="prompt-item-schedule">{{ formatTime(prompt.schedule_time) }} · {{ formatDays(prompt.schedule_days) }}</span>
+                    </div>
+                  </div>
+                  <div class="prompt-item-actions" @click.stop>
+                    <button @click="deletePrompt(prompt.id)" class="icon-btn delete" title="Delete">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT PANEL: Edit Form (slides in when editing) -->
+          <div v-if="editingPromptId" class="edit-panel">
+            <div class="edit-panel-header">
+              <h4>Edit Prompt</h4>
+              <button @click="cancelEdit" class="close-edit-btn" title="Close">×</button>
+            </div>
+            
+            <div class="edit-form">
+              <div class="form-group">
+                <label>Title</label>
+                <input v-model="editForm.title" type="text" class="edit-input" />
+              </div>
+
+              <div class="form-group">
+                <label>Prompt Template</label>
+                <textarea v-model="editForm.prompt_text" rows="20" class="edit-input"></textarea>
+              </div>
+
+              <div class="form-row-2col">
+                <div class="form-group">
+                  <label>Schedule Time (UTC)</label>
+                  <input v-model="editForm.schedule_time" type="time" class="edit-input" />
+                </div>
+                
                 <div class="form-group relative">
                   <label>Days to Run</label>
-                  <div class="custom-select-trigger" @click="showNewPromptDayDropdown = !showNewPromptDayDropdown">
-                     {{ formatDays(newPrompt.schedule_days) }}
-                     <span class="arrow">▼</span>
+                  <div class="custom-select-trigger" @click="showEditPromptDayDropdown = !showEditPromptDayDropdown">
+                    {{ formatDays(editForm.schedule_days) }}
+                    <span class="arrow">▼</span>
                   </div>
-                  
-                  <div v-if="showNewPromptDayDropdown" class="custom-select-dropdown">
-                    <!-- All Days Option -->
+                  <div v-if="showEditPromptDayDropdown" class="custom-select-dropdown">
                     <label class="dropdown-item special">
                       <input 
                         type="checkbox" 
-                        class="days-checkbox"
-                        :checked="isAllSelected(newPrompt.schedule_days)" 
-                        @change="toggleAllDays(newPrompt, $event)"
+                        :checked="isAllSelected(editForm.schedule_days)" 
+                        @change="toggleAllDays(editForm, $event)"
                       />
                       <span>All Days</span>
                     </label>
                     <div class="dropdown-divider"></div>
-                    <!-- Individual Days -->
                     <label v-for="day in availableDays" :key="day.value" class="dropdown-item">
                       <input 
                         type="checkbox" 
-                        class="days-checkbox"
                         :value="day.value" 
-                        :checked="isDaySelected(newPrompt.schedule_days, day.value)"
-                        @change="toggleIndividualDay(newPrompt, day.value)"
+                        :checked="isDaySelected(editForm.schedule_days, day.value)"
+                        @change="toggleIndividualDay(editForm, day.value)"
                       />
                       <span>{{ day.label }}</span>
                     </label>
                   </div>
                 </div>
+              </div>
 
-                <!-- Email Notification -->
-                <div class="form-group">
-                  <label>Email Notification</label>
-                  <div class="toggle-row">
-                    <label class="toggle-switch">
-                      <input type="checkbox" v-model="newPrompt.email_notification" />
-                      <span class="toggle-slider"></span>
-                    </label>
-                    <span class="toggle-label">{{ newPrompt.email_notification ? 'On' : 'Off' }}</span>
-                  </div>
+              <div class="form-group">
+                <label>Email Notification</label>
+                <div class="toggle-row">
+                  <label class="toggle-switch">
+                    <input type="checkbox" v-model="editForm.email_notification" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">{{ editForm.email_notification ? 'On' : 'Off' }}</span>
                 </div>
               </div>
 
-              <div class="form-group full-width">
-                <label>Prompt Template</label>
-                <textarea v-model="newPrompt.prompt_text" rows="8" placeholder="Enter system instructions..."></textarea>
+              <div class="edit-form-actions">
+                <button @click="cancelEdit" class="btn-secondary">Cancel</button>
+                <button @click="saveEdit(editingPromptId)" class="btn-primary">Save Changes</button>
               </div>
-              <div class="form-actions">
-                <button @click="addPrompt" :disabled="isSaving || !isValidNewPrompt" class="btn-primary btn-sm">
-                  {{ isSaving ? 'Saving...' : 'Save Prompt' }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <!-- Existing Prompts List -->
-          <div class="existing-prompts-section">
-            <h4>Existing Prompts</h4>
-            <div v-if="isLoadingPrompts" class="loading-state">Loading prompts...</div>
-            <div v-else-if="prompts.length === 0" class="empty-list">No prompts configured</div>
-            
-            <div v-else class="prompts-table-container">
-              <table class="prompts-table">
-                <thead>
-                  <tr>
-                    <th style="width: 40px">Active</th>
-                    <th style="width: 200px">Title</th>
-                    <th>Prompt</th>
-                    <th style="width: 150px">Schedule (UTC)</th>
-                    <th style="width: 60px">Email</th>
-                    <th style="width: 60px"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="prompt in prompts" :key="prompt.id">
-                    <td>
-                      <!-- Active Toggle -->
-                      <label class="switch">
-                        <input 
-                          type="checkbox" 
-                          :checked="prompt.is_active" 
-                          @change="togglePromptActive(prompt)"
-                        >
-                        <span class="slider round"></span>
-                      </label>
-                    </td>
-                    <td>
-                      <input 
-                        v-if="editingPromptId === prompt.id" 
-                        v-model="editForm.title" 
-                        class="inline-input"
-                      />
-                      <span v-else class="text-display" @click="startEdit(prompt)">{{ prompt.title }}</span>
-                    </td>
-                    <td>
-                      <textarea
-                        v-if="editingPromptId === prompt.id" 
-                        v-model="editForm.prompt_text" 
-                        class="inline-input"
-                        rows="11"
-                      ></textarea>
-                      <span v-else class="text-display truncate" @click="startEdit(prompt)" :title="prompt.prompt_text">{{ prompt.prompt_text }}</span>
-                    </td>
-                    <td>
-                      <div v-if="editingPromptId === prompt.id" class="edit-schedule relative">
-                         <input v-model="editForm.schedule_time" type="time" class="inline-input mb-1" />
-                         
-                         <div class="custom-select-trigger small" @click="showEditPromptDayDropdown = !showEditPromptDayDropdown">
-                           {{ formatDays(editForm.schedule_days) }}
-                         </div>
-
-                         <div v-if="showEditPromptDayDropdown" class="custom-select-dropdown small">
-                            <label class="dropdown-item special">
-                              <input 
-                                type="checkbox" 
-                                :checked="isAllSelected(editForm.schedule_days)" 
-                                @change="toggleAllDays(editForm, $event)"
-                              />
-                              <span>All Days</span>
-                            </label>
-                            <div class="dropdown-divider"></div>
-                            <label v-for="day in availableDays" :key="day.value" class="dropdown-item">
-                              <input 
-                                type="checkbox" 
-                                :value="day.value" 
-                                :checked="isDaySelected(editForm.schedule_days, day.value)"
-                                @change="toggleIndividualDay(editForm, day.value)"
-                              />
-                              <span>{{ day.label }}</span>
-                            </label>
-                         </div>
-                      </div>
-                      <div v-else class="text-display" @click="startEdit(prompt)">
-                        <div>{{ formatTime(prompt.schedule_time) }}</div>
-                        <div class="days-badge">{{ formatDays(prompt.schedule_days) }}</div>
-                      </div>
-                    </td>
-                    <td>
-                      <!-- Email Notification Toggle (Edit Mode) -->
-                      <div v-if="editingPromptId === prompt.id">
-                        <label class="switch">
-                          <input 
-                            type="checkbox" 
-                            v-model="editForm.email_notification"
-                          >
-                          <span class="slider round"></span>
-                        </label>
-                      </div>
-                      <div v-else class="text-display" @click="startEdit(prompt)">
-                        <span :class="['email-badge', prompt.email_notification ? 'on' : 'off']">
-                          {{ prompt.email_notification ? 'On' : 'Off' }}
-                        </span>
-                      </div>
-                    </td>
-                    <td class="actions-cell">
-                      <div v-if="editingPromptId === prompt.id" class="edit-actions">
-                         <button @click="saveEdit(prompt.id)" class="icon-btn save" title="Save">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        </button>
-                        <button @click="cancelEdit" class="icon-btn cancel" title="Cancel">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
-                      </div>
-                      <div v-else class="row-actions">
-                        <button @click="deletePrompt(prompt.id)" class="icon-btn delete" title="Delete">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </div>
 
@@ -815,882 +804,4 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-/* Markdown*/
-/* Custom Select Dropdown */
-.relative { position: relative; }
-
-.custom-select-trigger {
-  border: 1px solid #e5e7eb;
-  padding: 0.5rem;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.9rem;
-  min-height: 38px;
-}
-.custom-select-trigger.small {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-  min-height: 28px;
-}
-.custom-select-trigger:hover {
-  border-color: #9ca3af;
-}
-
-.custom-select-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  z-index: 50;
-  margin-top: 4px;
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 4px 0;
-}
-.custom-select-dropdown.small {
-  width: 200px; /* Fixed width for the mini editor */
-}
-
-.dropdown-item {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #374151;
-  gap: 0.75rem;
-  text-align: left;
-}
-.dropdown-item input {
-  margin: 0;
-  flex-shrink: 0;
-  width: 14px;
-}
-.dropdown-item span {
-  flex-grow: 0;
-  white-space: nowrap;
-}
-.dropdown-item:hover {
-  background: #f3f4f6;
-}
-.dropdown-item.special {
-  font-weight: 600;
-  color: #111827;
-}
-
-.dropdown-divider {
-  height: 1px;
-  background: #e5e7eb;
-  margin: 4px 0;
-}
-
-.arrow {
-  font-size: 0.7rem;
-  color: #6b7280;
-}
-
-/* Form Row Flex - for horizontal alignment */
-.form-row-flex {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  width: 100%;
-}
-.form-row-flex .form-group {
-  flex: 1;
-  min-width: 0;
-}
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-}
-
-/* Toggle Switch */
-.toggle-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.toggle-group label:first-child {
-  min-width: 120px;
-}
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-}
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: 0.3s;
-  border-radius: 24px;
-}
-.toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.3s;
-  border-radius: 50%;
-}
-.toggle-switch input:checked + .toggle-slider {
-  background-color: #10b981;
-}
-.toggle-switch input:checked + .toggle-slider:before {
-  transform: translateX(20px);
-}
-.toggle-label {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-
-.days-badge {
-  font-size: 0.7rem;
-  color: #6b7280;
-  margin-top: 0.1rem;
-  background: #f3f4f6;
-  padding: 0 4px;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-/* Scrollbar styling */
-:deep(.detail-body) {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #374151;
-  line-height: 1.6;
-}
-
-:deep(.detail-body h1), :deep(.detail-body h2), :deep(.detail-body h3) {
-  color: #111827;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-  font-weight: 600;
-}
-
-:deep(.detail-body h1) { font-size: 1.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
-:deep(.detail-body h2) { font-size: 1.25rem; }
-:deep(.detail-body h3) { font-size: 1.1rem; }
-
-:deep(.detail-body p) {
-  margin-bottom: 1rem;
-}
-
-:deep(.detail-body ul), :deep(.detail-body ol) {
-  margin-bottom: 1rem;
-  padding-left: 1.5rem;
-}
-
-:deep(.detail-body li) {
-  margin-bottom: 0.25rem;
-}
-
-:deep(.detail-body strong) {
-  color: #000;
-  font-weight: 600;
-}
-
-:deep(.detail-body pre) {
-  background: #f3f4f6;
-  padding: 1rem;
-  border-radius: 6px;
-  overflow-x: auto;
-  margin-bottom: 1rem;
-}
-
-:deep(.detail-body code) {
-  background: #f3f4f6;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.85em;
-  font-family: monospace;
-}
-
-:deep(.detail-body blockquote) {
-  border-left: 4px solid #e5e7eb;
-  padding-left: 1rem;
-  margin-left: 0;
-  color: #6b7280;
-  font-style: italic;
-}
-
-:deep(.detail-body table) {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-:deep(.detail-body th), :deep(.detail-body td) {
-  padding: 0.5rem;
-  border: 1px solid #e5e7eb;
-  text-align: left;
-}
-
-:deep(.detail-body th) {
-  background: #f9fafb;
-  font-weight: 600;
-}
-</style>
-
-<style scoped>
-.analysis-page {
-  height: calc(100vh - 60px); 
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  padding: 1rem;
-}
-
-.header-section {
-  margin-bottom: 1rem;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-content h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.new-analysis-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: #000;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: opacity 0.2s;
-  width: 150px;
-}
-
-.new-analysis-btn:hover {
-  opacity: 0.8;
-}
-
-.analysis-container {
-  display: flex;
-  flex: 1;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-}
-
-/* Sidebar List */
-.report-list {
-  width: 30%;
-  border-right: 1px solid #e5e7eb;
-  overflow-y: auto;
-  background: #f9fafb;
-}
-
-.empty-list {
-  padding: 2rem;
-  text-align: center;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.report-group {
-  margin-bottom: 0.5rem;
-}
-
-.group-header {
-  padding: 0.5rem 1rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: #f9fafb;
-  text-align: center;
-  border-bottom: 1px solid #f3f4f6;
-  border-top: 1px solid #f3f4f6;
-  margin-bottom: 0;
-}
-
-.report-item {
-  padding: 1rem;
-  border-bottom: 1px solid #f3f4f6;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.report-item:hover {
-  background: #f3f4f6;
-}
-
-.report-item.active {
-  background: #eef2ff;
-  border-left: 3px solid #4f46e5;
-}
-
-.report-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.25rem;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.delete-report-btn {
-  background: none;
-  border: none;
-  color: #9ca3af;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-
-.delete-report-btn:hover {
-  color: #ef4444;
-  background: #fee2e2;
-}
-
-.report-title {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #111827;
-  line-height: 1.4;
-}
-
-.report-date {
-  font-size: 0.75rem;
-  color: #6b7280;
-  white-space: nowrap;
-}
-
-.report-preview {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #4b5563;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Main Content */
-.report-content {
-  width: 70%;
-  padding: 2rem;
-  overflow-y: auto;
-}
-
-.detail-header {
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.detail-header h3 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #111827;
-}
-
-.detail-date {
-  color: #6b7280;
-}
-
-.detail-body {
-  line-height: 1.6;
-  color: #374151;
-}
-
-.empty-state, .loading-state, .empty-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  color: #9ca3af;
-  height: 100%;
-}
-
-.empty-list {
-  height: auto;
-  font-style: italic;
-}
-
-
-/* Modal */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
-
-.modal-lg {
-  width: 1200px;
-  max-width: 95%;
-}
-
-.modal-xl {
-  width: 95%;
-  height: 90vh;
-}
-
-.detail-meta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.btn-payload {
-  background: white;
-  border: 1px solid #e5e7eb;
-  color: #4b5563;
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  align-items: center;
-  gap: 0.4rem;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-.btn-payload:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-  color: #111827;
-}
-
-.btn-text {
-  background: none;
-  border: none;
-  color: #4f46e5;
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: underline;
-  padding: 0;
-}
-.btn-text:hover { color: #4338ca; }
-
-.modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.payload-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.payload-section.collapsible {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 0;
-  overflow: hidden;
-}
-
-.payload-section .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  cursor: pointer;
-  background: #f9fafb;
-  transition: background 0.15s ease;
-}
-
-.payload-section .section-header:hover {
-  background: #f3f4f6;
-}
-
-.payload-section .section-header label {
-  cursor: pointer;
-  margin: 0;
-}
-
-.payload-section .chevron {
-  font-size: 0.75rem;
-  color: #6b7280;
-  transition: transform 0.2s ease;
-}
-
-.payload-section .chevron.expanded {
-  transform: rotate(90deg);
-}
-
-.payload-section.collapsible .payload-value {
-  border-top: 1px solid #e5e7eb;
-  border-radius: 0;
-}
-
-.payload-section label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #374151;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.payload-value.tag {
-  align-self: flex-start;
-  background: #e0e7ff;
-  color: #4338ca;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.payload-value.code-block {
-  background: #f0f9ff; /* Light powder blue */
-  color: #1e293b;
-  padding: 1rem;
-  border-radius: 8px;
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-  font-size: 0.85rem;
-  line-height: 1.6;
-  white-space: pre-wrap; /* Preserve formatting */
-  overflow-x: auto;
-  border: 1px solid #bae6fd;
-}
-
-/* Markdown content styling inside code blocks */
-.payload-value.markdown-content {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  white-space: normal;
-}
-
-.payload-value.markdown-content table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1em 0;
-  font-size: 0.85rem;
-}
-
-.payload-value.markdown-content th {
-  background: #e0f2fe;
-  color: #0369a1;
-  font-weight: 600;
-  text-align: left;
-  padding: 10px 12px;
-  border: 1px solid #bae6fd;
-}
-
-.payload-value.markdown-content td {
-  padding: 8px 12px;
-  border: 1px solid #bae6fd;
-  vertical-align: top;
-}
-
-.payload-value.markdown-content tr:nth-child(even) {
-  background: #e0f2fe;
-}
-
-.payload-value.markdown-content strong {
-  color: #0c4a6e;
-}
-
-.payload-value.markdown-content code {
-  background: #e0f2fe;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.9em;
-}
-
-.payload-value.markdown-content hr {
-  border: none;
-  border-top: 1px solid #bae6fd;
-  margin: 1.5em 0;
-}
-
-.json-display {
-  display: none;
-}
-
-.modal-header {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #6b7280;
-}
-
-.modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-}
-
-/* Form Styles */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.form-group.full-width {
-  grid-column: span 2;
-}
-
-.form-group label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #374151;
-}
-
-.form-group input, .form-group textarea {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.9rem;
-}
-.form-group textarea {
-  resize: vertical;
-}
-
-.form-actions {
-  grid-column: span 2;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.btn-primary {
-  background: #000;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.divider {
-  height: 1px;
-  background: #e5e7eb;
-  margin: 1.5rem 0;
-}
-
-/* Prompts Table */
-.prompts-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.prompts-table th {
-  text-align: left;
-  padding: 0.75rem;
-  background: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
-  color: #6b7280;
-  font-weight: 600;
-}
-
-.prompts-table td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
-  vertical-align: top;
-}
-
-.text-display {
-  display: block;
-  cursor: pointer;
-  padding: 4px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-}
-.text-display:hover {
-  background: #f9fafb;
-  border-color: #e5e7eb;
-}
-
-.text-display.truncate {
-  max-width: 400px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.inline-input {
-  width: 100%;
-  padding: 4px;
-  border: 1px solid #4f46e5;
-  border-radius: 4px;
-  font-size: inherit;
-  font-family: inherit;
-}
-
-/* Switch */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 36px;
-  height: 20px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 2px;
-  bottom: 2px;
-  background-color: white;
-  transition: .4s;
-}
-
-input:checked + .slider {
-  background-color: #10b981;
-}
-
-input:checked + .slider:before {
-  transform: translateX(16px);
-}
-
-.slider.round {
-  border-radius: 20px;
-}
-.slider.round:before {
-  border-radius: 50%;
-}
-
-.actions-cell {
-  text-align: right;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  margin-left: 4px;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.icon-btn:hover {
-  background: #f3f4f6;
-}
-.icon-btn.delete { color: #ef4444; }
-.icon-btn.save { color: #10b981; }
-.icon-btn.cancel { color: #6b7280; }
-
-.edit-actions, .row-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-
-.days-checkbox {
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-</style>
+<style scoped src="../styles/AnalysisApp.css"></style>
