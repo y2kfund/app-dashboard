@@ -3,13 +3,22 @@
     <div class="header-section">
       <div class="header-content">
         <h2>AI Analysis</h2>
-        <button @click="openNewAnalysisModal" class="btn-primary new-analysis-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Manage Prompts
-        </button>
+        <div class="header-actions">
+          <button @click="openNewAnalysisModal" class="btn-primary new-analysis-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Manage Prompts
+          </button>
+          <button @click="showTasksPanel = !showTasksPanel" class="btn-primary tasks-toggle-btn" :class="{ active: showTasksPanel }">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+            </svg>
+            Tasks
+          </button>
+        </div>
       </div>
     </div>
 
@@ -75,6 +84,14 @@
           </svg>
           <p>Select a report to view details</p>
         </div>
+      </div>
+
+      <!-- Tasks Side Panel -->
+      <div v-if="showTasksPanel" class="tasks-side-panel">
+        <Tasks 
+          :user-id="user?.id" 
+          @minimize="showTasksPanel = false"
+        />
       </div>
     </div>
 
@@ -315,11 +332,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useSupabase } from '@y2kfund/core'
 import { useAuth } from '../composables/useAuth'
 import { marked } from 'marked'
+import { Tasks } from '@y2kfund/tasks'
+import '@y2kfund/tasks/dist/style.css'
 
 // Router for URL management
 const router = useRouter()
@@ -375,6 +394,7 @@ const prompts = ref<AnalysisPrompt[]>([])
 const isLoadingPrompts = ref(false)
 const showModal = ref(false)
 const isSaving = ref(false)
+const showTasksPanel = ref(false)
 
 const availableDays = [
   { label: 'Mon', value: 'Mon' },
@@ -745,11 +765,6 @@ const openNewAnalysisModal = () => {
   fetchPrompts() // Refresh list on open
 }
 const closeModal = () => showModal.value = false
-
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-// ... (imports)
-
-// ... (rest of code)
 
 // Initial Load
 onMounted(() => {
