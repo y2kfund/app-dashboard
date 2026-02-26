@@ -514,9 +514,20 @@ watch(windowColumns, (cols) => {
       if (el && !resizeObservers.value[col.id]) {
         const debouncedResize = debounce((entry, gridItem, cellHeight) => {
           if (gridInstance.value) {
-            const newHeight = Math.ceil(entry.contentRect.height / cellHeight)
+            // Per-widget minimum heights from known-good layout
+            const widgetId = gridItem.getAttribute('data-gs-id') || ''
+            const widgetType = widgetId.split('_')[0]
+            const MIN_HEIGHTS: Record<string, number> = {
+              summary: 9,
+              positions: 11,
+              thesisPieChart: 8,
+            }
+            const minH = MIN_HEIGHTS[widgetType] || 5
+            const newHeight = Math.max(minH, Math.ceil(entry.contentRect.height / cellHeight))
             const node = gridInstance.value.engine.nodes.find(n => n.el === gridItem)
-            if (node && newHeight > 0 && node.h !== newHeight) {
+            // Only grow, never shrink — prevents race condition where observer
+            // fires before data loads and collapses widgets to h:1
+            if (node && newHeight > 0 && newHeight > node.h) {
               gridInstance.value.update(gridItem, { h: newHeight })
               gridInstance.value.compact()
             }
