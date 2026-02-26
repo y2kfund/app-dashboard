@@ -18,6 +18,7 @@
     "@y2kfund/capital-across-thesis-risk-management": "git+https://github.com/y2kfund/app-capital-across-thesis-risk-management.git",
     "@y2kfund/cash-transactions": "git+https://github.com/y2kfund/app-cash-transactions.git",
     "@y2kfund/core": "git+https://github.com/y2kfund/app-core.git",
+    "echarts": "^5.5.0",
     "@y2kfund/current-positions-for-single-instrument": "git+https://github.com/y2kfund/app-current-position-across-all-accounts-for-single-instrument.git",
     "@y2kfund/documents-for-single-instrument": "git+https://github.com/y2kfund/app-documents-for-single-instrument.git",
     "@y2kfund/instrument-insights": "git+https://github.com/y2kfund/app-instrument-insights.git",
@@ -35,6 +36,7 @@
     "html2canvas": "^1.4.1",
     "marked": "^17.0.1",
     "vue": "^3.4.0",
+    "vue-echarts": "^7.0.3",
     "vue-router": "^4.3.2"
   },
   "devDependencies": {

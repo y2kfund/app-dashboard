@@ -9,6 +9,7 @@ import { Trades } from '@y2kfund/trades'
 import { Transfers } from '@y2kfund/transfers'
 import { CashTransactions } from '@y2kfund/cash-transactions'
 import { aiAnalyseTimelineConversationCard, ConversationDropdown } from '@y2kfund/analyze-timeline'
+import ThesisPieChart from '../components/ThesisPieChart.vue'
 import { AiReccomendations } from '@y2kfund/ai-recommendations-for-single-instrument'
 import '@y2kfund/positions/dist/style.css'
 import '@y2kfund/summary/dist/style.css'
@@ -77,7 +78,8 @@ const columns = ref<Column[]>([
   { id: 'trades', title: 'Trades', content: '', component: Trades, window: 'window_1' },
   { id: 'transfers', title: 'Transfers', content: '', component: Transfers, window: 'window_1' },
   { id: 'aiTimelineCard', title: 'aiTimelineCard', content: '', component: aiAnalyseTimelineConversationCard, window: 'window_1' },
-  { id: 'cashTransactions', title: 'Cash Transactions', content: '', component: CashTransactions, window: 'window_1' }
+  { id: 'cashTransactions', title: 'Cash Transactions', content: '', component: CashTransactions, window: 'window_1' },
+  { id: 'thesisPieChart', title: 'Thesis Capital', content: '', component: ThesisPieChart, window: 'window_1' }
 ])
 
 // Track mode for each component (window = visible, tab = minimized)
@@ -89,7 +91,8 @@ const componentModes = ref<Record<string, ComponentMode>>({
   trades: 'window',
   transfers: 'window',
   cashTransactions: 'window',
-  aiTimelineCard: 'tab' // minimized by default
+  aiTimelineCard: 'tab', // minimized by default
+  thesisPieChart: 'window'
 })
 
 // Computed properties
@@ -551,7 +554,8 @@ const gridTypes = [
   { id: 'trades', title: 'Trades', component: Trades },
   { id: 'transfers', title: 'Transfers', component: Transfers },
   { id: 'cashTransactions', title: 'Cash Transactions', component: CashTransactions },
-  { id: 'aiTimelineCard', title: 'aiTimelineCard', component: aiAnalyseTimelineConversationCard }
+  { id: 'aiTimelineCard', title: 'aiTimelineCard', component: aiAnalyseTimelineConversationCard },
+  { id: 'thesisPieChart', title: 'Thesis Capital', component: ThesisPieChart }
 ]
 
 // Add a new grid instance
