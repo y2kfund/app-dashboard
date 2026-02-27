@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, watch, nextTick, onBeforeUnmount } from 'vue'
+import { computed, ref, shallowRef, watch, nextTick, onBeforeUnmount, inject } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { PieChart } from 'echarts/charts'
@@ -42,6 +42,9 @@ const emit = defineEmits<{
   'minimize': []
   'maximize': []
 }>()
+
+// Inject event bus for cross-component communication
+const eventBus = inject<any>('eventBus')
 
 // Fetch capital across thesis data
 const { data: thesisData, isLoading, error } = useCapitalAcrossThesisQuery(props.userId)
@@ -266,7 +269,7 @@ const chartOption = computed(() => {
 // Chart instance reference
 const chartRef = shallowRef()
 
-// Handle chart click for drill-down
+// Handle chart click for drill-down + emit thesis filter to positions table
 const handleChartClick = (params: any) => {
   if (currentView.value === 'parent') {
     const parentThesisId = params.data.parentThesisId
@@ -277,6 +280,15 @@ const handleChartClick = (params: any) => {
       level: 'child',
       parentThesisId
     })
+
+    // Emit all child thesis titles under this parent to filter positions
+    const parentGroup = parentThesisGroups.value.find(
+      g => (g.parentThesisId || 'NO_PARENT') === parentThesisId
+    )
+    if (parentGroup && eventBus) {
+      const thesisTitles = parentGroup.childTheses.map(t => t.thesisTitle)
+      eventBus.emit('thesis-filter-changed', { thesisTitles, source: 'thesisPieChart' })
+    }
   } else if (currentView.value === 'child') {
     const thesisId = params.data.thesisId
     selectedChildThesisId.value = thesisId
@@ -286,6 +298,11 @@ const handleChartClick = (params: any) => {
       level: 'symbol',
       thesisId
     })
+
+    // Emit single child thesis title to filter positions
+    if (eventBus) {
+      eventBus.emit('thesis-filter-changed', { thesisTitles: [params.name], source: 'thesisPieChart' })
+    }
   }
 }
 
@@ -296,10 +313,22 @@ const navigateTo = (index: number) => {
     currentView.value = 'parent'
     selectedParentThesisId.value = null
     selectedChildThesisId.value = null
+    // Clear thesis filter when navigating back to top level
+    if (eventBus) {
+      eventBus.emit('thesis-filter-changed', { thesisTitles: [], source: 'thesisPieChart' })
+    }
   } else if (item.level === 'child') {
     currentView.value = 'child'
     selectedParentThesisId.value = item.parentThesisId || null
     selectedChildThesisId.value = null
+    // Re-emit parent-level thesis filter
+    const parentGroup = parentThesisGroups.value.find(
+      g => (g.parentThesisId || 'NO_PARENT') === item.parentThesisId
+    )
+    if (parentGroup && eventBus) {
+      const thesisTitles = parentGroup.childTheses.map(t => t.thesisTitle)
+      eventBus.emit('thesis-filter-changed', { thesisTitles, source: 'thesisPieChart' })
+    }
   } else if (item.level === 'symbol') {
     currentView.value = 'symbol'
     selectedChildThesisId.value = item.thesisId || null
