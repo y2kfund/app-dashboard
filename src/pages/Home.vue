@@ -377,10 +377,31 @@ function restoreMaximized(columnId: string | null) {
   }
 }
 
+// Handler: when Summary sub-table is collapsed, force-shrink only summary grid widgets
+const handleSummarySubtableCollapsed = () => {
+  if (!gridInstance.value || !gridstackRef.value) return
+  nextTick(() => {
+    const cellHeight = gridInstance.value!.opts.cellHeight as number
+    gridInstance.value!.engine.nodes.forEach(node => {
+      const widgetId = node.el?.getAttribute('data-gs-id') || ''
+      if (!widgetId.startsWith('summary')) return
+      const contentEl = node.el?.querySelector('.grid-stack-item-content .dashboard-container') as HTMLElement | null
+      if (!contentEl) return
+      const minH = 9 // summary min height
+      const newH = Math.max(minH, Math.ceil(contentEl.scrollHeight / cellHeight))
+      if (node.h && newH < node.h) {
+        gridInstance.value!.update(node.el!, { h: newH })
+        gridInstance.value!.compact()
+      }
+    })
+  })
+}
+
 onMounted(() => {
   initializeSidebarState() // Add this line
   loadFromUrlParams()
   eventBus.on('timeline:show-dropdown', handleTimelineShowDropdown)
+  eventBus.on('summary:subtable-collapsed', handleSummarySubtableCollapsed)
   nextTick(() => {
     if (gridstackRef.value) {
       gridInstance.value = GridStack.init({ 
@@ -430,6 +451,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   eventBus.off('timeline:show-dropdown', handleTimelineShowDropdown)
+  eventBus.off('summary:subtable-collapsed', handleSummarySubtableCollapsed)
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('keydown', handleKeydown)
 
